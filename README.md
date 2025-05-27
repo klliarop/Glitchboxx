@@ -4,9 +4,7 @@ This project provides a Cyber Range Sandbox for security concepts and techniques
 # Prerequisites (system level requirements)
 Before running this project, ensure you have the following installed:
 
-##3.8 or 3.6????????
 - Python 3.6: You can download Python from [python.org](https://www.python.org/).
-##3.8 or 3.6????????
 
 - Docker and Docker Compose: Required for running the servers. Follow the official Docker installation instructions for your operating system:
     * [Docker Installation](https://docs.docker.com/get-docker/)
@@ -59,8 +57,8 @@ Use the admin panel to select exercise types , set credentials, and configure fl
 
 4.  Launch User Panels:
 
-Use the buttons in the admin panel to launch the user panels for each exercise. The user panels will be created and open automatically.
-The users, without admin permission, can also access the platform through this url "http://127.0.0.1:8502". 
+#Use the buttons in the admin panel to launch the user panels for each exercise. The user panels will be created and open automatically.
+#The users, without admin permission, can also access the platform through this url "http://127.0.0.1:8502". 
 
 Also users with different id can be created when "http://127.0.0.1:8502/?id=1"
 
