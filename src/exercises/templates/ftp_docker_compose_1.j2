@@ -1,0 +1,11 @@
+services:
+  ftp:
+    image: garethflowers/ftp-server
+    environment:
+      - FTP_USER={{ ftp_user }}
+      - FTP_PASS={{ ftp_pass }}
+    ports:
+      - '20-21:20-21/tcp'
+      - '40000-40009:40000-40009/tcp'  # passive mode
+    volumes:
+      - ./shared:/home/{{ ftp_user }}

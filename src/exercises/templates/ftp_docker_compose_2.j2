@@ -1,0 +1,16 @@
+services:
+  ftp:
+    image: garethflowers/ftp-server
+    environment:
+      - FTP_USER={{ ftp_user }}
+      - FTP_PASS={{ ftp_pass }}
+    ports:
+      - '20-21:20-21/tcp'
+      - '40000-40009:40000-40009/tcp' 
+    volumes:
+      - ./shared:/home/{{ ftp_user }}
+    command: >
+      sh -c "echo 'Only user \"{{ ftp_user }}\" is allowed to access this FTP server.' > /etc/vsftpd.banner &&
+             echo 'banner_file=/etc/vsftpd.banner' >> /etc/vsftpd.conf &&
+             /usr/sbin/vsftpd /etc/vsftpd.conf"
+      

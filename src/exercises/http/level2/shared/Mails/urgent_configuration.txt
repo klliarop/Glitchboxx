@@ -1,0 +1,4 @@
+From: IT Admin   
+To: Security Department 
+The confidential 'flag' file was mistakenly stored in the docs! 
+Please revert this action as soon as possible

@@ -1,0 +1,4 @@
+**TO BE DONE** 
+ - Review IP Blacklist    
+ - Review Filewall rules before deployment 
+ - Check users access to confidential files (restrict access) 

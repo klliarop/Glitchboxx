@@ -1,0 +1,12 @@
+services:
+  ftp:
+    image: garethflowers/ftp-server
+    environment:
+      - FTP_USER=anonymous
+      - FTP_PASS=
+    ports:
+      - '20-21:20-21/tcp'
+      - '40000-40009:40000-40009/tcp'  # passive mode
+    volumes:
+      - ./shared:/home/anonymous
+    runtime: runsc

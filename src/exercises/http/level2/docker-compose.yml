@@ -1,0 +1,73 @@
+services:
+  web:
+    build: .
+    ports:
+      - "172.29.0.1:8080:80"
+    networks:
+      isolated_net_http_2:
+        ipv4_address: 172.29.0.10
+    depends_on:
+      - db
+    runtime: runsc
+    environment:
+      - DB_HOST=db
+      - DB_USER=vuln_user
+      - DB_PASS=vuln_pass
+      - DB_NAME=vulnerable_db
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: vulnerable_db
+      MYSQL_USER: vuln_user
+      MYSQL_PASSWORD: vuln_pass
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      isolated_net_http_2:
+        ipv4_address: 172.29.0.11
+    runtime: runsc
+
+  ftp:
+    container_name: ftp-server-2
+    image: garethflowers/ftp-server
+    environment:
+      - FTP_USER=anonymous
+      - FTP_PASS=
+    ports:
+      - '172.29.0.1:21:21'
+      - '172.29.0.1:40000-40009:40000-40009'
+    volumes:
+      - ./shared:/home/anonymous
+    networks:
+      isolated_net_http_2:
+        ipv4_address: 172.29.0.12
+    runtime: runsc
+
+  traffic_generator:
+    build:
+      context: .
+      dockerfile: Dockerfile.traffic
+    depends_on:
+      - web
+
+    environment:
+      TARGET_URL: "http://172.29.0.10/index.php"
+      PROXY_URL: "http://172.29.0.10/index.php"
+
+    # environment:
+    #   TARGET_URL: "http://web/index.php"
+    #   PROXY_URL: "http://web/index.php"
+    networks:
+      - isolated_net_http_2
+    runtime: runsc
+    
+networks:
+  isolated_net_http_2:
+    name: isolated_net_http_2 
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16

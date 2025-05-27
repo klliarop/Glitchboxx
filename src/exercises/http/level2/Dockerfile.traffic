@@ -1,0 +1,14 @@
+FROM python:3.9-slim-buster
+
+WORKDIR /app
+
+COPY traffic_generator.py .
+
+# Install any necessary Python libraries (if you use a Python script)
+RUN pip install requests
+
+# Make the script executable (if it's a shell script)
+# RUN chmod +x traffic_generator.sh
+
+# Command to run the traffic generator
+CMD ["python", "traffic_generator.py"]

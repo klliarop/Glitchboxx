@@ -1,0 +1,56 @@
+services:
+  web:
+    build: .
+    ports:
+      - "172.28.0.1:8080:80"
+    networks:
+      isolated_net_http_1:
+        ipv4_address: 172.28.0.10
+    depends_on:
+      - db
+    runtime: runsc
+    environment:
+      - DB_HOST=db
+      - DB_USER=vuln_user
+      - DB_PASS=vuln_pass
+      - DB_NAME=vulnerable_db
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: vulnerable_db
+      MYSQL_USER: vuln_user
+      MYSQL_PASSWORD: vuln_pass
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      isolated_net_http_1:
+        ipv4_address: 172.28.0.11
+    runtime: runsc
+
+  ftp:
+    container_name: ftp-server-1
+    image: garethflowers/ftp-server
+    environment:
+      - FTP_USER={{ ftp_user }}
+      - FTP_PASS={{ ftp_pass }}
+    ports:
+      - '172.28.0.1:21:21/tcp'
+      - '172.28.0.1:40000-40009:40000-40009/tcp'
+    volumes:
+      - ./shared:/home/{{ ftp_user }}
+    networks:
+      isolated_net_http_1:
+        ipv4_address: 172.28.0.12
+    runtime: runsc
+
+networks:
+  isolated_net_http_1:
+    name: isolated_net_http_1 
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+

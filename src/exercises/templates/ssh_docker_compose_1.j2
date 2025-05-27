@@ -1,0 +1,13 @@
+services:
+  ssh:
+    image: rastasheep/ubuntu-sshd:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SSH_USERNAME: {{ ssh_user }}
+        SSH_PASSWORD: {{ ssh_pass }}
+    ports:
+      - "22:22"
+    volumes:
+      - ./shared:/home/{{ ssh_user }}

@@ -1,0 +1,20 @@
+services:
+  ssh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SSH_USERNAME: Smith_bot
+        SSH_PASSWORD: 3rJs1la7qE
+    image: ssh_level2
+    ports:
+      - "22:22"
+    volumes:
+      - ./shared:/home/Smith_bot
+      - ./rootfolder:/root
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - seccomp=unconfined
+    runtime: runc

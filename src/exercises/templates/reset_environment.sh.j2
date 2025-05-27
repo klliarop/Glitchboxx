@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo "=== Starting reset_environment.sh ==="
+echo "Cleaning Logs directory..."
+rm -rf /home/{{ ssh_user }}/Logs/*
+mkdir -p /home/{{ ssh_user }}/Logs
+
+echo "Restoring shell.c..."
+cp -v /persistent_files/shell.c /home/{{ ssh_user }}/Logs/shell.c
+
+echo "Setting permissions..."
+chown -R {{ ssh_user }}:{{ ssh_user }} /home/{{ ssh_user }}
+chmod 644 /home/{{ ssh_user }}/Logs/shell.c
+
+echo "Ensuring nano directory exists..."
+mkdir -p /home/{{ ssh_user }}/.local/share/nano/
+chown -R {{ ssh_user }}:{{ ssh_user }} /home/{{ ssh_user }}/.local
+chmod -R u+w /home/{{ ssh_user }}/
+
+echo "Verifying contents:"
+ls -la /home/{{ ssh_user }}/Logs/
+
+echo "Starting SSH server..."
+exec /usr/sbin/sshd -D

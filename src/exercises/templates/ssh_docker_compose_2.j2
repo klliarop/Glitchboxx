@@ -1,0 +1,19 @@
+services:
+  ssh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SSH_USERNAME: {{ ssh_user }}
+        SSH_PASSWORD: {{ ssh_pass }}
+    image: ssh_level2
+    ports:
+      - "22:22"
+    volumes:
+      - ./shared:/home/{{ ssh_user }}
+      - ./rootfolder:/root
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - seccomp=unconfined

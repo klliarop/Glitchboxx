@@ -1,0 +1,11 @@
+From: IT Security Team  
+To: All Employees  
+Date: February 20, 2024  
+
+Dear Team,  
+
+We have detected unauthorized login attempts on our FTP server.  
+Please reset your passwords immediately. Do NOT use 'admin' as your password.  
+
+Regards, 
+IT Security  
