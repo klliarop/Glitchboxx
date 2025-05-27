@@ -105,10 +105,6 @@ def edit_files(exercise_type, level, config_func):
                 st.error(f"Could not open file: {e}")
 
 
-
-
-
-
         st.markdown("---")
 
         # Upload Section
