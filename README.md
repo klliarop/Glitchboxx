@@ -84,7 +84,7 @@ Glitchboxx/
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/klliarop/Glitchboxx.git
 cd wireguard-vpn-server
 ```
 
