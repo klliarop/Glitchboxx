@@ -1,17 +1,16 @@
 <?php
-$host = '172.28.0.11'; 
-$user = 'vuln_user';
-$pass = 'vuln_pass';
-$dbname = 'vulnerable_db';
+$host = getenv('DB_HOST') ?: '172.28.1.11';  // Get DB host from environment or use default
+$user = getenv('DB_USER') ?: 'ctfuser';      // Get DB user from environment or use default
+$pass = getenv('DB_PASS') ?: 'ctfpass';      // Get DB password from environment or use default
+$db   = getenv('MYSQL_DATABASE') ?: 'ctf';   // Get DB name from environment or use default
 
-$conn = new mysqli($host, $user, $pass, $dbname);
+// Connect to MySQL database
+$conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-
-
-# ✅ CHECK that user_id exists and is not empty
+// Check that user_id exists and is not empty in GET parameters
 if (!isset($_GET['user_id']) || empty($_GET['user_id'])) {
     header("Location: index.php");
     exit();
@@ -20,12 +19,13 @@ $user_id = $_GET['user_id'];
 
 $message = '';
 
-
+// If form is submitted via POST, process the order creation
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $product_name = $_POST['product_name'];
     $quantity = $_POST['quantity'];
     $delivery_address = $_POST['delivery_address'];
     
+    // Insert the new order into the database
     $sql = "INSERT INTO orders (user_id, product_name, quantity, delivery_address) 
             VALUES ('$user_id', '$product_name', '$quantity', '$delivery_address')";
     

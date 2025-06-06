@@ -3,4 +3,4 @@
  [WARNING] - Detected unauthorized access from 192.168.1.50 
  [INFO] - User 'backup_admin' accessed 'flag.txt' on /var/ftp 
  [CRITICAL] - **File flagged as sensitive. Moved to internal docs.** 
- [INFO] - Backup completed. 
+ [INFO] - Backup completed.  

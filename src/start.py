@@ -1,20 +1,24 @@
-import streamlit as st
-import requests
-import importlib
-import os
-import base64
-import sys
-import glob
-import subprocess
+import streamlit as st  # Import Streamlit for web UI
+import requests  # For making HTTP requests to backend services
+import importlib  # For dynamic module import
+import os  # For file and path operations
+import base64  # For encoding images to base64 for backgrounds
+import sys  # For manipulating the Python path
 
 
-# Base URLs
-BASE_URL_LOGIN = "http://127.0.0.1:5001"
-BASE_URL_REGISTER = "http://127.0.0.1:5002"
+#import glob  # For file pattern matching (not used in this file)
+
+# import subprocess  # For running subprocesses (not used in this file)
+
+
+
+# Base URLs for backend services
+BASE_URL_LOGIN = "http://127.0.0.1:5001"  # Login service
+BASE_URL_REGISTER = "http://127.0.0.1:5002"  # Registration service
 #BASE_URL_VPN = "http://127.0.0.1:5003"
-BASE_URL_VPN = "http://192.168.1.241:5003"   # change to be able to reach files (downloadables) from other devices
+BASE_URL_VPN = "http://192.168.1.241:5003"   # VPN service (LAN IP for external access)
 
-# Add project root to Python path
+# Add project root to Python path for module imports
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
@@ -64,17 +68,16 @@ def set_custom_styles():
 
     </style>
     """
-    st.markdown(custom_css, unsafe_allow_html=True)
-
+    st.markdown(custom_css, unsafe_allow_html=True)  # Apply custom CSS styles
 
 # Function to set the background image
 def set_background(image_file):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    wallpapers_dir = os.path.join(base_dir, "wallpapers")
-    image_path = os.path.join(wallpapers_dir, image_file)
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # Get current directory
+    wallpapers_dir = os.path.join(base_dir, "wallpapers")  # Path to wallpapers folder
+    image_path = os.path.join(wallpapers_dir, image_file)  # Path to the selected image
     with open(image_path, "rb") as f:
-        img_data = f.read()
-    b64_encoded = base64.b64encode(img_data).decode()
+        img_data = f.read()  # Read image data
+    b64_encoded = base64.b64encode(img_data).decode()  # Encode image to base64
     style = f"""
         <style>
         .stApp {{
@@ -85,11 +88,11 @@ def set_background(image_file):
         }}
         </style>
     """
-    st.markdown(style, unsafe_allow_html=True)
+    st.markdown(style, unsafe_allow_html=True)  # Set background style
 
-
+# Login form and logic
 def login_user():
-    set_background('app_wallpaper.jpg')
+    set_background('app_wallpaper.jpg')  # Set background for login page
     st.markdown("<p class='title-text'>Welcome to Glitchboxx</p>", unsafe_allow_html=True)
     st.markdown("<p class='subheader-text'>Login</p>", unsafe_allow_html=True)
 
@@ -109,7 +112,7 @@ def login_user():
         else:
             st.error("Invalid username or password")
 
-
+# Registration form and logic
 def register_user():
     st.markdown("<p class='title-text'>Welcome to  Glitchboxx</p>", unsafe_allow_html=True)
     st.markdown("<p class='subheader-text'>Register</p>", unsafe_allow_html=True)
@@ -129,28 +132,9 @@ def register_user():
         except requests.exceptions.RequestException as e:
             st.error(f"Connection error: {str(e)}")
 
-
-# def exercise_selection_page():
-#     set_background('app_wallpaper.jpg')
-#     st.markdown("<p class='subheader-text'>Select an Exercise</p>", unsafe_allow_html=True)
-#     exercise_choices = ["ftp", "ssh", "http"]
-#     level_choices = ["level1", "level2"]
-
-#     exercise = st.selectbox(" ", exercise_choices)
-#     level = st.selectbox(" ", level_choices)
-
-#     if st.button("Start Exercise"):
-#         st.session_state.exercise = exercise
-#         st.session_state.level = level
-#         st.session_state.exercise_running = True
-#         st.query_params["user_id"] = st.session_state.user_id
-#         st.query_params["exercise"] = exercise
-#         st.query_params["level"] = level
-#         st.rerun()
-
-
+# Exercise selection page logic
 def exercise_selection_page():
-    set_background('app_wallpaper.jpg')
+    set_background('app_wallpaper.jpg')  # Set background for exercise selection
     st.markdown("<p class='subheader-text'>Select an Exercise</p>", unsafe_allow_html=True)
 
     # Mapping for user-friendly display
@@ -159,17 +143,30 @@ def exercise_selection_page():
         "Matrix Alert": "ssh",
         "Da Vinci Node": "http"
     }
-    level_labels = {
-        "Level 1 - Beginner": "level1",
-        "Level 2 - Intermediate": "level2"
+
+    level_options_by_exercise = {
+        "ftp": {
+            "Level 1 - Beginner": "level1",
+            "Level 2 - Intermediate": "level2"
+        },
+        "ssh": {
+            "Level 1 - Beginner": "level1",
+            "Level 2 - Intermediate": "level2"
+        },
+        "http": {
+            "Level 1 - Beginner": "level1",
+            "Level 2 - Intermediate": "level2",
+            "Level 3 - Advanced": "level3"
+        }
     }
 
-    # Display friendly labels, store internal values
+    # Display exercise selection
     exercise_display = st.selectbox("Choose an Exercise", list(exercise_labels.keys()))
-    level_display = st.selectbox("Choose a Level", list(level_labels.keys()))
-
-    # Lookup actual internal values
     exercise = exercise_labels[exercise_display]
+
+    # Get level options based on selected exercise
+    level_labels = level_options_by_exercise[exercise]
+    level_display = st.selectbox("Choose a Level", list(level_labels.keys()))
     level = level_labels[level_display]
 
     if st.button("Start Exercise"):
@@ -181,21 +178,16 @@ def exercise_selection_page():
         st.query_params["level"] = level
         st.rerun()
 
-
-
-
+# Main app logic
 def main():
-    set_custom_styles()
+    set_custom_styles()  # Apply custom styles
 
+    # Initialize session state variables
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
     if "exercise_running" not in st.session_state:
         st.session_state.exercise_running = False
 
-    # user_id = st.query_params.get("user_id")
-    # progress_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exercises", "ftp", "level1", "progress")
-
-########################
     user_id = st.query_params.get("user_id")
     exercise = st.session_state.get("exercise") or st.query_params.get("exercise")
     level = st.session_state.get("level") or st.query_params.get("level")
@@ -203,8 +195,8 @@ def main():
         progress_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exercises", exercise, level, "progress")
     else:
         progress_dir = None
-#########################
 
+    # Show login/register tabs if not logged in
     if not st.session_state.logged_in:
         tab1, tab2 = st.tabs(["Login", "Register"])
         with tab1:
@@ -212,18 +204,21 @@ def main():
         with tab2:
             register_user()
     else:
+        # If exercise is running, show exercise UI and cleanup logic
         if st.session_state.exercise_running or ("exercise" in st.query_params and "level" in st.query_params):
             if st.button("Return to exercise selection"):
                 st.session_state.exercise_running = False
                 st.query_params.pop("exercise", None)
                 st.query_params.pop("level", None)
 
+                # Remove user progress file if it exists
                 if user_id and os.path.exists(progress_dir):
                     user_file_path = os.path.join(progress_dir, f"{user_id}.json")
                     if os.path.exists(user_file_path):
                         os.remove(user_file_path)
                         st.success(f"Deleted progress file: {user_file_path}")
 
+                # Clean up Docker containers and firewall rules for the user
                 compose_dir = os.path.dirname(os.path.abspath(__file__))
                 exercise = st.session_state.get("exercise")
                 level = st.session_state.get("level")
@@ -238,7 +233,17 @@ def main():
 
                     if hasattr(module, class_name):
                         user_obj = getattr(module, class_name)()
-                        user_obj.stop_container_for_user(user_id)
+                        
+                        vpn_ip = user_obj.get_vpn_ip_for_user(user_id, config_path="/etc/wireguard/wg0.conf")
+                        container_ip = user_obj.get_container_ip(user_id)
+
+                        if vpn_ip and container_ip:
+                            user_obj.remove_firewall_rules(vpn_ip, container_ip)
+                        else:
+                            print(f"[WARNING] Skipping firewall rule removal because vpn_ip or container_ip is None. vpn_ip={vpn_ip}, container_ip={container_ip}")
+
+                        user_obj.stop_container_for_user(user_id) 
+                        
                         # Reset progress in session and file
                         st.session_state.user_progress = user_obj.initialize_progress(user_id)
                         user_obj.save_progress(user_id, st.session_state.user_progress)
@@ -246,34 +251,21 @@ def main():
                         if os.path.exists(user_progress_file):
                             os.remove(user_progress_file)
                     elif hasattr(module, "stop_container_for_user"):
-                        module.stop_container_for_user(user_id)
-                        
-                    # if hasattr(module, "remove_container"):
-
-
-
-                    # if hasattr(module, "get_vp"):
-                    # if hasattr(module, "remove_firewall_rules"):
-                    #     # Assuming you need IPs — grab from session if available
-
-                    #     vpn_ip = st.session_state.get("vpn_ip") or get_vpn_ip_for_user(user_id)
-                    #     container_ip = st.session_state.get("container_ip")
-                        
-                    #     if vpn_ip and container_ip:
-                    #         module.remove_firewall_rules(vpn_ip, container_ip)
-
+                        module.stop_container_for_user(user_id)  
+               
                     if hasattr(module, "get_user_progress_file"):
                         user_progress_file = module.get_user_progress_file(user_id)
                         if os.path.exists(user_progress_file):
                             os.remove(user_progress_file)
                            
 
+                # Clear session state except for login info
                 for key in list(st.session_state.keys()):
                     if key not in ['logged_in', 'user_id']:
                         del st.session_state[key]
                 st.rerun()
 
-            
+            # Dynamically import and run the user exercise module
             module_name = f"exercises.{st.query_params['exercise']}.{st.query_params['level']}.user"
             module = importlib.import_module(module_name)
             module.main(user_id=st.session_state.user_id)
@@ -283,7 +275,7 @@ def main():
             st.markdown("---")
             st.markdown("<p class='subheader-text'>Start your VPN session</p>", unsafe_allow_html=True)
             
-
+            # Instructions for VPN connection
             st.markdown(f"""
                 <style>
                     code {{
@@ -321,6 +313,7 @@ def main():
 
             st.markdown("<br>", unsafe_allow_html=True)
 
+            # Button to generate WireGuard config
             if st.button("Generate WireGuard Config"):
                 try:
                     response = requests.post(
@@ -336,8 +329,9 @@ def main():
                 except requests.exceptions.RequestException as e:
                     st.error(f"Error contacting VPN service: {e}")
 
-            exercise_selection_page()
+            exercise_selection_page()  # Show exercise selection page
 
+            # Logout button and cleanup
             if st.button("Logout"):
                 try:
                     # Remove WireGuard config before logout
@@ -352,6 +346,41 @@ def main():
                 st.rerun()
 
 if __name__ == "__main__":
-    main()
+    main()  # Run the Streamlit app
+
+
+# def exercise_selection_page():
+#     set_background('app_wallpaper.jpg')
+#     st.markdown("<p class='subheader-text'>Select an Exercise</p>", unsafe_allow_html=True)
+
+#     # Mapping for user-friendly display
+#     exercise_labels = {
+#         "Dark Contract": "ftp",
+#         "Matrix Alert": "ssh",
+#         "Da Vinci Node": "http"
+#     }
+#     level_labels = {
+#         "Level 1 - Beginner": "level1",
+#         "Level 2 - Intermediate": "level2",
+#         "Level 3 - Advanced": "level3"
+#     }
+
+#     # Display friendly labels, store internal values
+#     exercise_display = st.selectbox("Choose an Exercise", list(exercise_labels.keys()))
+#     level_display = st.selectbox("Choose a Level", list(level_labels.keys()))
+
+#     # Lookup actual internal values
+#     exercise = exercise_labels[exercise_display]
+#     level = level_labels[level_display]
+
+#     if st.button("Start Exercise"):
+#         st.session_state.exercise = exercise
+#         st.session_state.level = level
+#         st.session_state.exercise_running = True
+#         st.query_params["user_id"] = st.session_state.user_id
+#         st.query_params["exercise"] = exercise
+#         st.query_params["level"] = level
+#         st.rerun()
+
 
 

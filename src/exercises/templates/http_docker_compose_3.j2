@@ -1,0 +1,11 @@
+services:
+  web:
+    build: ./web
+    volumes:
+      - ./web:/app
+    networks:
+      - ctf_net
+
+networks:
+  ctf_net:
+    external: true

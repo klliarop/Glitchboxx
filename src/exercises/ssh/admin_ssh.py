@@ -1,11 +1,12 @@
-import streamlit as st
-from jinja2 import Template
-import os
-from pathlib import Path
-import bcrypt
-from exercises.exercise_base import ExerciseConfig
+import streamlit as st  # Import Streamlit for web UI
+from jinja2 import Template  # For rendering Jinja2 templates
+import os  # For file and path operations
+from pathlib import Path  # For object-oriented filesystem paths
+import bcrypt  # For password hashing
+from exercises.admin_base import AdminConfig  # Import abstract base class for admin configs
 
-class SSHConfig(ExerciseConfig):
+class SSHConfig(AdminConfig):
+    # SSH exercise configuration class inheriting from AdminConfig
 
     def update_docker_files(self, user, password, level):
         """Generate docker-compose.yml, Dockerfile, and reset_environment.sh dynamically for SSH."""
@@ -23,6 +24,7 @@ class SSHConfig(ExerciseConfig):
         # Select the correct template files based on the level
         compose_template_path = templates_dir / f"ssh_docker_compose_{level_number}.j2"
         dockerfile_template_path = templates_dir / f"ssh_dockerfile_{level_number}.j2"
+
         reset_template_path = templates_dir / "reset_environment.sh.j2"
     
         # Read and render docker-compose template
@@ -65,8 +67,8 @@ class SSHConfig(ExerciseConfig):
         
         st.success(f"SSH Docker files updated for {level}. To run or edit files manually navigate to '{level_dir}' ")
 
-
     def configure_level(self, level, shared_dir):
+        # Configure the SSH exercise level and provide UI for setting credentials
         if level == "Level 1 - SSH Password Recovery":
             st.markdown("""  
                 **SCENARIO:** <br> **"Agent Smith, an AI bot uncontrolled by the Matrix's constraints, has created a server where his friend
@@ -84,8 +86,6 @@ class SSHConfig(ExerciseConfig):
 
                 submitted = st.form_submit_button("Update SSH Settings")
                 if submitted:
-                    self.update_docker_files(ssh_user, ssh_pass, level)
-
                     generated_hash = generate_bcrypt_hash(ssh_pass)
                     level_number = "1" if "Level 1 - SSH Password Recovery" in level else "unknown"
                     level_dir = Path(__file__).parent / f"level{level_number}"
@@ -94,7 +94,6 @@ class SSHConfig(ExerciseConfig):
                         f.write(generated_hash)
                     st.info(f"Bcrypt hash saved to: `{hash_file_path}`")
                     self.update_docker_files(ssh_user, ssh_pass, level)
-
 
         elif level == "Level 2 - SSH Root Escalation":
             st.markdown("""  **SCENARIO:** <br> **"After his last defeat and the deletion of Reality_Override.exe, Agent Smith reconstructed himself from corrupted backup data
@@ -115,20 +114,7 @@ class SSHConfig(ExerciseConfig):
                 if submitted:
                     self.update_docker_files(ssh_user, ssh_pass, level)
 
-
 def generate_bcrypt_hash(password):
     """Generates a bcrypt hash for the given password."""
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     return hashed_password.decode('utf-8')
-
-
-
-
-
-
-
-
-
-
-
-

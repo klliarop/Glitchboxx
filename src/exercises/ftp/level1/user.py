@@ -1,19 +1,22 @@
-import streamlit as st
-import os
-import subprocess
-import base64
-import json
-import docker
-from docker.errors import NotFound
-from exercises.user_base import UserExerciseBase
+import streamlit as st  # Import Streamlit for web UI
+import os  # For file and path operations
+import subprocess  # For running shell commands (e.g., iptables)
+import base64  # For encoding images to base64 for backgrounds
+import json  # For saving/loading user progress
+import docker  # For Docker container management
+from docker.errors import NotFound  # For handling missing Docker containers
+from exercises.user_base import UserExerciseBase  # Import base class for user exercises
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../../"))
-PROGRESS_DIR = os.path.join(SRC_DIR, "progress", "ftp", "level1")
-start_dir = os.path.join(CURRENT_DIR, "shared")
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # Current directory of this script
+SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../../"))  # Project source directory
+PROGRESS_DIR = os.path.join(SRC_DIR, "progress", "ftp", "level1")  # Directory for user progress files
+start_dir = os.path.join(CURRENT_DIR, "shared")  # Shared directory for exercise files
 
 class FTPLevel1User(UserExerciseBase):
+    # User logic for FTP Level 1 exercise
+
     def set_background(self, image_file):
+        # Set the background image for the exercise UI
         base_dir = os.path.dirname(os.path.abspath(__file__))
         wallpapers_dir = os.path.join(base_dir, "../../../wallpapers")
         image_path = os.path.abspath(os.path.join(wallpapers_dir, image_file))
@@ -36,6 +39,7 @@ class FTPLevel1User(UserExerciseBase):
             st.error(f"Background image not found at: {image_path}")
 
     def start_container_for_user(self, user_id):
+        # Start the Docker container for the user
         client = docker.from_env()
         image = "garethflowers/ftp-server"
         network_name = "ctf_net"
@@ -70,6 +74,7 @@ class FTPLevel1User(UserExerciseBase):
         return container, ip
 
     def stop_container_for_user(self, user_id):
+        # Stop and remove the Docker container for the user
         client = docker.from_env()
         container_name = f"ftp_level1_{user_id}"
         try:
@@ -79,38 +84,32 @@ class FTPLevel1User(UserExerciseBase):
             pass
 
     def get_container_ip(self, user_id):
+        # Get the container's IP address for the user
         client = docker.from_env()
         container_name = f"ftp_level1_{user_id}"
+        network_name = "ctf_net"
         try:
             container = client.containers.get(container_name)
-            return container.attrs["NetworkSettings"]["IPAddress"]
-        except NotFound:
+            return container.attrs["NetworkSettings"]["Networks"][network_name]["IPAddress"]
+        except (NotFound, KeyError):
             return None
 
-
     def add_firewall_rules(self, vpn_ip, container_ip):
+        # Add firewall rules for the user's VPN and container IPs
         subprocess.run(["sudo","/usr/sbin/iptables", "-I", "DOCKER-USER", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
         subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "DOCKER-USER", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
-        print( f"sudo","/usr/sbin/iptables", "-I", "DOCKER-USER", "-i", "wg0", "-s", {vpn_ip}, "-d", {container_ip}, "-j", "ACCEPT")
-
 
     def remove_firewall_rules(self, vpn_ip, container_ip):
+        # Remove firewall rules for the user's VPN and container IPs
         subprocess.run(["sudo","/usr/sbin/iptables", "-D", "DOCKER-USER", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
         subprocess.run(["sudo","/usr/sbin/iptables", "-D", "DOCKER-USER", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
 
-
-    # def add_firewall_rules(self, vpn_ip, container_ip):
-    #     subprocess.run(["sudo","/usr/sbin/iptables", "-I", "FORWARD", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
-    #     subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "FORWARD", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
-
-    # def remove_firewall_rules(self, vpn_ip, container_ip):
-    #     subprocess.run(["sudo","/usr/sbin/iptables", "-D", "FORWARD", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
-    #     subprocess.run(["sudo","/usr/sbin/iptables", "-D", "FORWARD", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
-
     def get_user_progress_file(self, user_id):
+        # Get the path to the user's progress file
         return os.path.join(PROGRESS_DIR, f"{user_id}.json")
 
     def save_progress(self, user_id, user_progress):
+        # Save the user's progress data
         user_file = self.get_user_progress_file(user_id)
         try:
             with open(user_file, "w") as f:
@@ -119,11 +118,13 @@ class FTPLevel1User(UserExerciseBase):
             st.error(f"Error saving progress for {user_id}: {e}")
 
     def initialize_progress(self, user_id):
+        # Initialize the user's progress data
         progress = {f"step{i}": False for i in range(1, 7)}
         progress["completed"] = False
         return progress
 
     def load_progress(self, user_id):
+        # Load the user's progress data
         user_file = self.get_user_progress_file(user_id)
         if os.path.exists(user_file):
             try:
@@ -136,6 +137,7 @@ class FTPLevel1User(UserExerciseBase):
             return self.initialize_progress(user_id)
 
     def validate_credentials(self, user_id, step_num, question_text, correct_username, correct_password):
+        # Validate credentials for a step in the exercise
         st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
         with st.form(key=f"user_{user_id}_step{step_num}_form"):
             user_input = st.text_input(
@@ -161,6 +163,7 @@ class FTPLevel1User(UserExerciseBase):
                     st.error("Invalid format! Use 'username:password'")
 
     def validate_and_update_step(self, user_id, step_num, question_text, placeholder, correct_answer):
+        # Validate and update a step in the exercise
         st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
         with st.form(key=f"user_{user_id}_step{step_num}_form"):
             col1, col2 = st.columns([2, 1])
@@ -177,30 +180,8 @@ class FTPLevel1User(UserExerciseBase):
                 else:
                     st.error("Wrong answer!")
 
-    # def validate_flag_step(self, user_id, step_num, question_text, placeholder, flag_file_relative):
-    #     st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
-    #     with st.form(key=f"user_{user_id}_step{step_num}_form"):
-    #         col1, col2 = st.columns([2, 1])
-    #         with col1:
-    #             user_answer = st.text_input(" ", placeholder=placeholder, key=f"user_{user_id}_step{step_num}_input", autocomplete="off")
-    #         with col2:
-    #             st.markdown("<br>", unsafe_allow_html=True)
-    #             submit_button = st.form_submit_button("Submit")
-    #         if submit_button:
-    #             flag_file_path = os.path.join(start_dir, flag_file_relative)
-    #             if flag_file_path and os.path.exists(flag_file_path):
-    #                 with open(flag_file_path, "r") as file:
-    #                     correct_flag = file.read().strip()
-    #                 if user_answer.strip() == correct_flag:
-    #                     st.session_state.user_progress[f"step{step_num}"] = True
-    #                     self.save_progress(user_id, st.session_state.user_progress)
-    #                     st.success("Correct!")
-    #                 else:
-    #                     st.error("Wrong flag!")
-    #             else:
-    #                 st.error("Flag file not found.")
-
     def validate_flag_step(self, user_id, step_num, question_text, placeholder, flag_file_name):
+        # Validate a flag step in the exercise
         st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
         with st.form(key=f"user_{user_id}_step{step_num}_form"):
             col1, col2 = st.columns([2, 1])
@@ -229,8 +210,8 @@ class FTPLevel1User(UserExerciseBase):
                 else:
                     st.error("Flag file not found.")
 
-
     def get_vpn_ip_for_user(self, user_id, config_path="/etc/wireguard/wg0.conf"):
+        # Get the VPN IP for the user from the WireGuard config
         vpn_map = {}
         current_user_id = None
         try:
@@ -249,6 +230,7 @@ class FTPLevel1User(UserExerciseBase):
             return None
 
 def main(user_id):
+    # Main function to run the FTP Level 1 user exercise
     user = FTPLevel1User()
     user.set_background('back_ftp.jpg')
 
@@ -267,6 +249,7 @@ def main(user_id):
         <br> - Search for the flag!</p>""", unsafe_allow_html=True)
 
     if st.button("Start Exercise", key="start_exercise"):
+        # Reset progress and start the Docker container for the user
         st.session_state.user_progress = user.initialize_progress(user_id)
         user.save_progress(user_id, st.session_state.user_progress)
         try:
@@ -283,6 +266,7 @@ def main(user_id):
             st.error(f"Error restarting Docker container: {e}")
 
     if "container_ip" in st.session_state:
+        # Show the container IP to the user
         st.markdown(f"""
         <div style="
             background-color: #000000;
@@ -305,8 +289,10 @@ def main(user_id):
         """, unsafe_allow_html=True)
 
     if "container_ip" not in st.session_state:
+        # Set a default value if container_ip is not set
         st.session_state.container_ip = "none - Press start exercise to continue"
 
+    # Validate each step of the exercise
     user.validate_and_update_step(user_id, 1, "1.Which tool should you use to scan for open ports on the target?", "***p", "nmap")
     user.validate_and_update_step(user_id, 2, "2.At what port does the FTP appear?", "**", "21")
     user.validate_and_update_step(user_id, 3, "3.With what command can you connect to the FTP server?", "*** ***.*.*.*", f"ftp {st.session_state.container_ip}")
@@ -314,19 +300,23 @@ def main(user_id):
     user.validate_and_update_step(user_id, 5, "5.What command can you use to download files in ftp?", "***", "get")
     user.validate_flag_step(user_id, 6, "7. Enter the flag", "FLAG{...}", "flag.txt")
 
+    # Check if all steps are completed
     all_steps_completed = all(st.session_state.user_progress.get(f"step{i}", False) for i in range(1, 7))
 
     if all_steps_completed and not st.session_state.user_progress["completed"]:
+        # Mark the exercise as completed
         st.session_state.user_progress["completed"] = True
         user.save_progress(user_id, st.session_state.user_progress)
 
     if st.session_state.user_progress["completed"]:
+        # Show congratulations message
         st.markdown("""
             <h1 style='text-align: center; color: green; font-size: 50px;'> CONGRATULATIONS! </h1>
             <p style='text-align: center; font-size: 24px;'>You completed this exercise!</p>
         """, unsafe_allow_html=True)
 
     if st.button("Stop Exercise"):
+        # Stop the Docker container and clean up progress
         try:
             vpn_ip = st.session_state.get("vpn_ip") or user.get_vpn_ip_for_user(user_id)
             container_ip = st.session_state.get("container_ip")
@@ -352,7 +342,4 @@ def main(user_id):
             os.remove(user_progress_file)
 
 if __name__ == "__main__":
-    main("test_user")
-
-
-
+    main("test_user")  # Run the main function for a test user

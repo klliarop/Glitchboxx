@@ -52,14 +52,9 @@ services:
       dockerfile: Dockerfile.traffic
     depends_on:
       - web
-
     environment:
       TARGET_URL: "http://172.29.0.10/index.php"
       PROXY_URL: "http://172.29.0.10/index.php"
-
-    # environment:
-    #   TARGET_URL: "http://web/index.php"
-    #   PROXY_URL: "http://web/index.php"
     networks:
       - isolated_net_http_2
     runtime: runsc

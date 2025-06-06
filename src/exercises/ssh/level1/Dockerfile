@@ -36,5 +36,4 @@ rm -f /home/'"$SSH_USERNAME"'/Docs/flag.txt\n\
 exec /usr/sbin/sshd -D' > /start.sh && \
     chmod +x /start.sh
 
-#EXPOSE 22
 CMD ["/start.sh"]

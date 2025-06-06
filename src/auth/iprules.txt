@@ -120,6 +120,8 @@ echo "[*] Use dynamic rules in Python to allow specific container IPs per user."
 
 
 
+
+
 just keep
 :
 docker network create   --subnet=172.18.0.0/16   --opt com.docker.network.bridge.enable_icc=false   --opt com.docker.network.bridge.name=br-isolated   ctf_net

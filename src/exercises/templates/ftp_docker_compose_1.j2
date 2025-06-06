@@ -6,6 +6,6 @@ services:
       - FTP_PASS={{ ftp_pass }}
     ports:
       - '20-21:20-21/tcp'
-      - '40000-40009:40000-40009/tcp'  # passive mode
+      - '40000-40009:40000-40009/tcp'  
     volumes:
       - ./shared:/home/{{ ftp_user }}

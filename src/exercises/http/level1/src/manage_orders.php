@@ -1,10 +1,10 @@
 <?php
-$host = '172.28.0.11'; 
-$user = 'vuln_user';
-$pass = 'vuln_pass';
-$dbname = 'vulnerable_db';
+$host = getenv('DB_HOST') ?: '172.28.1.11';  // Get DB host from environment or use default
+$user = getenv('DB_USER') ?: 'ctfuser';      // Get DB user from environment or use default
+$pass = getenv('DB_PASS') ?: 'ctfpass';      // Get DB password from environment or use default
+$db   = getenv('MYSQL_DATABASE') ?: 'ctf';   // Get DB name from environment or use default
 
-$conn = new mysqli($host, $user, $pass, $dbname);
+$conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
@@ -34,10 +34,9 @@ $search_result = null;
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     $input_order_id = $conn->real_escape_string($_POST['order_id']);
     
-    // ✅ Allow search by numeric `id` or custom `custom_order_id`
+    // Allow search by numeric `id` or custom `custom_order_id`
     $sql = "SELECT * FROM orders WHERE custom_order_id='$input_order_id' AND user_id='$user_id'";
 
-#    $sql = "SELECT * FROM orders WHERE (id='$input_order_id' OR custom_order_id='$input_order_id') AND user_id='$user_id'";
     $search_result = $conn->query($sql);
 }
 ?>

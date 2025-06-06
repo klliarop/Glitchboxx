@@ -1,12 +1,12 @@
 <?php
-// Database configuration with hardcoded IP to avoid Docker DNS issue
-$host = '172.29.0.11';
-$user = getenv('DB_USER') ?: 'vuln_user';
-$pass = getenv('DB_PASS') ?: 'vuln_pass';
-$dbname = getenv('DB_NAME') ?: 'vulnerable_db';
+$host = getenv('DB_HOST') ?: '172.29.0.11';
+$user = getenv('DB_USER') ?: 'ctfuser2';
+$pass = getenv('DB_PASS') ?: 'ctfpass2';
+$db   = getenv('MYSQL_DATABASE') ?: 'ctf2';
 
 // Connect to database
-$conn = new mysqli($host, $user, $pass, $dbname);
+$conn = new mysqli($host, $user, $pass, $db);
+
 if ($conn->connect_error) {
     http_response_code(500);
     die("Connection failed: " . $conn->connect_error);

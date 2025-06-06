@@ -6,9 +6,8 @@ services:
       dockerfile: Dockerfile
       args:
         SSH_USERNAME: Agent_Smith
-        SSH_PASSWORD: daniel
+        SSH_PASSWORD: tinkerbell
     ports:
       - "22:22"
     volumes:
       - ./shared:/home/Agent_Smith
-    runtime: runc

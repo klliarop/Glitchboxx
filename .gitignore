@@ -1,1 +1,27 @@
+# Python
 venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment
+.env
+.env.*
+
+# WireGuard keys (never commit private keys!)
+wireguard/server_private.key
+wireguard/server_public.key
+
+# Databases
+# data/*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+*.pid

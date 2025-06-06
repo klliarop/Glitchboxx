@@ -53,11 +53,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['make_payment'])) {
     </html>
     ');
 
-   
-   
-   
-   
-    // die("FLAG: 7a5f8d3e1c9b24680a42d59"); // Stops execution and shows only flag
 }
 ?>
 

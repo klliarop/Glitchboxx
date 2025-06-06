@@ -1,0 +1,11 @@
+services:
+  web:
+    build: ./shared
+    volumes:
+      - ./shared:/app
+    networks:
+      - ctf_net
+
+networks:
+  ctf_net:
+    external: true

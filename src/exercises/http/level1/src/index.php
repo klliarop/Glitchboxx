@@ -1,14 +1,13 @@
 <?php
-$host = '172.28.0.11';  // IP of the db container
-#$host = 'db';
-$user = 'vuln_user';
-$pass = 'vuln_pass';
-$dbname = 'vulnerable_db';
+$host = getenv('DB_HOST') ?: '172.28.1.11';  // Get DB host from environment or use default
+$user = getenv('DB_USER') ?: 'ctfuser';      // Get DB user from environment or use default
+$pass = getenv('DB_PASS') ?: 'ctfpass';      // Get DB password from environment or use default
+$db   = getenv('MYSQL_DATABASE') ?: 'ctf';   // Get DB name from environment or use default
 
-$conn = new mysqli($host, $user, $pass, $dbname);
+$conn = new mysqli($host, $user, $pass, $db);  // Connect to MySQL database
 
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);  // Stop if connection fails
 }
 
 $login_message = '';
@@ -27,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = $result->fetch_assoc();
         $user_id = $user['id'];
 
-        // ✅ FIX: Redirect with user_id
+        // Redirect to menu with user_id if login is successful
         header("Location: menu.php?user_id=" . urlencode($user_id));
         exit();
     } else {
@@ -35,7 +34,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -75,40 +73,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-bottom: 20px;
         }
 
-        /* form {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            text-align: center;
-        } */
-
-        /* form {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            width: 300px; /* Add this * */
-
-        /* input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            display: block;
-        } */
-
-        /* input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        } */
-
-
         form {
             background: #ffffff;
             padding: 30px;
@@ -129,9 +93,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-size: 16px;
             box-sizing: border-box;
         }
-
-
-
 
         button {
             padding: 10px 20px;

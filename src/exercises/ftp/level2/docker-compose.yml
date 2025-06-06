@@ -13,5 +13,4 @@ services:
       sh -c "echo 'Only user \"hello\" is allowed to access this FTP server.' > /etc/vsftpd.banner &&
              echo 'banner_file=/etc/vsftpd.banner' >> /etc/vsftpd.conf &&
              /usr/sbin/vsftpd /etc/vsftpd.conf"
-    runtime: runsc
       

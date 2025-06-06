@@ -1,23 +1,26 @@
-import streamlit as st
-import os
-import subprocess
-import base64
-import json
-import docker
-from docker.errors import NotFound
-import shutil
-import yaml
+import streamlit as st  # Import Streamlit for web UI
+import os  # For file and path operations
+import subprocess  # For running shell commands (e.g., iptables)
+import base64  # For encoding images to base64 for backgrounds
+import json  # For saving/loading user progress
+import docker  # For Docker container management
+from docker.errors import NotFound  # For handling missing Docker containers
+import shutil  # For file operations (copying, removing directories)
+import yaml  # For parsing YAML files (docker-compose)
 
-from exercises.user_base import UserExerciseBase
+from exercises.user_base import UserExerciseBase  # Import base class for user exercises
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../../"))
-PROGRESS_DIR = os.path.join(SRC_DIR, "progress", "ssh", "level2")
-DOCKER_COMPOSE_PATH = os.path.join(CURRENT_DIR, "docker-compose.yml")
-start_dir = os.path.join(CURRENT_DIR, "rootfolder")
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # Current directory of this script
+SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../../"))  # Project source directory
+PROGRESS_DIR = os.path.join(SRC_DIR, "progress", "ssh", "level2")  # Directory for user progress files
+DOCKER_COMPOSE_PATH = os.path.join(CURRENT_DIR, "docker-compose.yml")  # Path to docker-compose file
+start_dir = os.path.join(CURRENT_DIR, "rootfolder")  # Directory for root-level files
 
 class SSHLevel2User(UserExerciseBase):
+    # User logic for SSH Level 2 exercise
+
     def set_background(self, image_file):
+        # Set the background image for the exercise UI
         base_dir = os.path.dirname(os.path.abspath(__file__))
         wallpapers_dir = os.path.join(base_dir, "../../../wallpapers")
         image_path = os.path.abspath(os.path.join(wallpapers_dir, image_file))
@@ -40,6 +43,7 @@ class SSHLevel2User(UserExerciseBase):
             st.error(f"Background image not found at: {image_path}")
 
     def get_vpn_ip_for_user(self, user_id, config_path="/etc/wireguard/wg0.conf"):
+        # Get the VPN IP for the user from the WireGuard config
         vpn_map = {}
         current_user_id = None
         try:
@@ -58,6 +62,7 @@ class SSHLevel2User(UserExerciseBase):
             return None
 
     def get_ssh_credentials(self):
+        # Retrieve SSH credentials from docker-compose.yml
         try:
             with open(DOCKER_COMPOSE_PATH, "r") as file:
                 docker_compose = yaml.safe_load(file)
@@ -74,6 +79,7 @@ class SSHLevel2User(UserExerciseBase):
             return None, None
 
     def validate_credentials(self, user_id, step_num, question_text, correct_username, correct_password):
+        # Validate credentials for a step in the exercise
         st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
         with st.form(key=f"user_{user_id}_step{step_num}_form"):
             user_input = st.text_input(
@@ -99,6 +105,7 @@ class SSHLevel2User(UserExerciseBase):
                     st.error("Invalid format! Use 'username:password'")
 
     def validate_and_update_step(self, user_id, step_num, question_text, placeholder, correct_answer):
+        # Validate and update a step in the exercise
         st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
         with st.form(key=f"user_{user_id}_step{step_num}_form"):
             col1, col2 = st.columns([2, 1])
@@ -116,6 +123,7 @@ class SSHLevel2User(UserExerciseBase):
                     st.error("Wrong answer!")
 
     def validate_flag_step(self, user_id, step_num, question_text, placeholder, flag_file_relative):
+        # Validate a flag step in the exercise
         st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
         with st.form(key=f"user_{user_id}_step{step_num}_form"):
             col1, col2 = st.columns([2, 1])
@@ -139,18 +147,18 @@ class SSHLevel2User(UserExerciseBase):
                     st.error("Flag file not found.")
 
     def find_flag_file(self, start_dir, target_filename="root.txt"):
+        # Recursively search for the flag file in the rootfolder directory
         for root, dirs, files in os.walk(start_dir):
             if target_filename in files:
                 return os.path.join(root, target_filename)
         return None
 
     def start_container_for_user(self, user_id):
+        # Start the Docker container for the user
         client = docker.from_env()
         network_name = "ctf_net"
         container_name = f"ssh_level2_{user_id}"
-        #image = f"ssh-escalation:{user_id}"
         image = "ssh_level2"
-
 
         ssh_username, ssh_password = self.get_ssh_credentials()
         if ssh_username is None or ssh_password is None:
@@ -197,7 +205,6 @@ class SSHLevel2User(UserExerciseBase):
                 name=container_name,
                 detach=True,
                 network=network_name,
-                #runtime="runsc",
                 volumes={
                     user_shared_dir: {
                         'bind': f'/home/{ssh_username}',
@@ -208,8 +215,7 @@ class SSHLevel2User(UserExerciseBase):
                         'mode': 'rw'
                     }
                 },
-                cap_add=["SYS_PTRACE", "SYS_ADMIN"]#,
-                #security_opt=["seccomp=unconfined"]
+                cap_add=["SYS_PTRACE", "SYS_ADMIN"]
             )
         except Exception as e:
             st.error(f"Container run failed: {e}")
@@ -220,6 +226,7 @@ class SSHLevel2User(UserExerciseBase):
         return container, container_ip
 
     def stop_container_for_user(self, user_id):
+        # Stop and remove the Docker container for the user
         client = docker.from_env()
         container_name = f"ssh_level2_{user_id}"
         try:
@@ -229,18 +236,33 @@ class SSHLevel2User(UserExerciseBase):
         except docker.errors.NotFound:
             pass
 
-    def add_firewall_rules(self, vpn_ip, container_ip):
-        subprocess.run(["sudo","iptables", "-A", "FORWARD", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
-        subprocess.run(["sudo","iptables", "-A", "FORWARD", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
+    def get_container_ip(self, user_id):
+        # Get the container's IP address for the user
+        client = docker.from_env()
+        container_name = f"ssh_level2_{user_id}"
+        network_name = "ctf_net"
+        try:
+            container = client.containers.get(container_name)
+            return container.attrs["NetworkSettings"]["Networks"][network_name]["IPAddress"]
+        except (NotFound, KeyError):
+            return None
 
+    def add_firewall_rules(self, vpn_ip, container_ip):
+        # Add firewall rules for the user's VPN and container IPs
+        subprocess.run(["sudo","/usr/sbin/iptables", "-I", "DOCKER-USER", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
+        subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "DOCKER-USER", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
+     
     def remove_firewall_rules(self, vpn_ip, container_ip):
-        subprocess.run(["sudo","iptables", "-D", "FORWARD", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
-        subprocess.run(["sudo","iptables", "-D", "FORWARD", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
+        # Remove firewall rules for the user's VPN and container IPs
+        subprocess.run(["sudo","/usr/sbin/iptables", "-D", "DOCKER-USER", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
+        subprocess.run(["sudo","/usr/sbin/iptables", "-D", "DOCKER-USER", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
 
     def get_user_progress_file(self, user_id):
+        # Get the path to the user's progress file
         return os.path.join(PROGRESS_DIR, f"{user_id}.json")
 
     def save_progress(self, user_id, user_progress):
+        # Save the user's progress data
         user_file = self.get_user_progress_file(user_id)
         try:
             with open(user_file, "w") as f:
@@ -249,11 +271,13 @@ class SSHLevel2User(UserExerciseBase):
             st.error(f"Error saving progress for {user_id}: {e}")
 
     def initialize_progress(self, user_id):
+        # Initialize the user's progress data
         progress = {f"step{i}": False for i in range(1, 13)}
         progress["completed"] = False
         return progress
 
     def load_progress(self, user_id):
+        # Load the user's progress data
         user_file = self.get_user_progress_file(user_id)
         if os.path.exists(user_file):
             try:
@@ -265,16 +289,8 @@ class SSHLevel2User(UserExerciseBase):
         else:
             return self.initialize_progress(user_id)
 
-    def get_container_ip(self, user_id):
-        client = docker.from_env()
-        container_name = f"ssh_level2_{user_id}"
-        try:
-            container = client.containers.get(container_name)
-            return container.attrs["NetworkSettings"]["IPAddress"]
-        except NotFound:
-            return None
-
 def main(user_id):
+    # Main function to run the SSH Level 2 user exercise
     user = SSHLevel2User()
     user.set_background('back_ssh.jpg')
 
@@ -342,6 +358,7 @@ def main(user_id):
             st.error(f"Error restarting Docker container: {e}")
 
     if "container_ip" in st.session_state:
+        # Show the container IP to the user
         st.markdown(f"""
         <div style="
             background-color: #000000;
@@ -364,8 +381,10 @@ def main(user_id):
         """, unsafe_allow_html=True)
 
     if "container_ip" not in st.session_state:
+        # Set a default value if container_ip is not set
         st.session_state.container_ip = "none - Press start exercise to continue"
 
+    # Validate each step of the exercise
     user.validate_and_update_step(user_id, 1, "1. How can you see the open services on the target?", "***p ***.*.*.*", "nmap 127.0.0.1")
     user.validate_and_update_step(user_id, 2, "2. What username you suspect is the one to login the server?", "S****_***", "smith_bot")
     user.validate_and_update_step(user_id, 3, "3. Common credentials don't apply so you have to bruteforce. Search for a tool to crack the password?", "cr***m*****c", "crackmapexec")
@@ -384,18 +403,22 @@ def main(user_id):
     user.validate_and_update_step(user_id, 11, "11. In Linux, permissions in files can be set by numbers (4755). The first digit ('4') enables the SUID bit, which lets the file run as its owner (root). What command can be applied in this situation?", "s*** c**** 4*** filename", "sudo chmod 4755 filename")
     user.validate_flag_step(user_id, 12, "12. Enter the flag", "FLAG{...}", "root.txt")
 
+    # Check if all steps are completed
     all_steps_completed = all(st.session_state.user_progress.get(f"step{i}", False) for i in range(1, 13))
     if all_steps_completed and not st.session_state.user_progress.get("completed", False):
+        # Mark the exercise as completed
         st.session_state.user_progress["completed"] = True
         user.save_progress(user_id, st.session_state.user_progress)
 
     if st.session_state.user_progress.get("completed", False):
+        # Show congratulations message
         st.markdown("""
             <h1 style='text-align: center; color: green; font-size: 50px;'>CONGRATULATIONS!</h1>
             <p style='text-align: center; font-size: 24px;'>You saved the world!</p>
         """, unsafe_allow_html=True)
 
     if st.button("Stop Exercise"):
+        # Stop the Docker container and clean up progress
         try:
             vpn_ip = st.session_state.get("vpn_ip") or user.get_vpn_ip_for_user(user_id)
             container_ip = st.session_state.get("container_ip")
@@ -414,7 +437,6 @@ def main(user_id):
         except Exception as e:
             print(f"[DEBUG] Unhandled error during exercise stop: {e}")
             st.error("Something went wrong while stopping the exercise. Contact admin.")
-
         st.session_state.user_progress = user.initialize_progress(user_id)
         user.save_progress(user_id, st.session_state.user_progress)
         user_progress_file = user.get_user_progress_file(user_id)
@@ -423,5 +445,3 @@ def main(user_id):
 
 if __name__ == "__main__":
     main("test_user")
-
-

@@ -17,4 +17,3 @@ services:
       - SYS_ADMIN
     security_opt:
       - seccomp=unconfined
-    runtime: runc

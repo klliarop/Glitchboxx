@@ -1,16 +1,17 @@
-import streamlit as st
-import os
-import json
+import streamlit as st  # Import Streamlit for web UI
+import os  # For file and path operations
+import json  # For handling JSON files
 
-PROGRESS_ROOT = os.path.join(os.path.dirname(__file__), "progress")
+PROGRESS_ROOT = os.path.join(os.path.dirname(__file__), "progress")  # Root directory for progress files
 
 list_of_protocols_and_user_ids = {
     "ftp": [],
     "ssh": [],
     "http": []
-}
+}  # Dictionary to track completed users per protocol
 
 def display_user_progress(data, user_id, protocol, level):
+    # Display a user's progress in a styled container
     with st.container():
         st.markdown(
             f"""
@@ -26,25 +27,24 @@ def display_user_progress(data, user_id, protocol, level):
             unsafe_allow_html=True
         )
 
-        progress_steps = [key for key in data if key.startswith("step")]
-        total_steps = len(progress_steps)
-        completed_steps = sum(1 for step in progress_steps if data[step])
-        progress_percentage = (completed_steps / total_steps) * 100 if total_steps > 0 else 0
+        progress_steps = [key for key in data if key.startswith("step")]  # Find all step keys
+        total_steps = len(progress_steps)  # Total number of steps
+        completed_steps = sum(1 for step in progress_steps if data[step])  # Count completed steps
+        progress_percentage = (completed_steps / total_steps) * 100 if total_steps > 0 else 0  # Calculate progress
 
-        st.write(f"Completed Steps: {completed_steps} / {total_steps}")
-        st.progress(int(progress_percentage))
+        st.write(f"Completed Steps: {completed_steps} / {total_steps}")  # Show completed steps
+        st.progress(int(progress_percentage))  # Show progress bar
 
         if completed_steps == total_steps:
-            list_of_protocols_and_user_ids[protocol].append(user_id)
+            list_of_protocols_and_user_ids[protocol].append(user_id)  # Track users who completed all steps
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
+        st.markdown("</div>", unsafe_allow_html=True)  # Close the styled container
 
 def load_all_progress_files(selected_service, selected_level):
     """Loads progress files for the selected protocol and level."""
     user_progress_data = []
 
-    level_path = os.path.join(PROGRESS_ROOT, selected_service, selected_level)
+    level_path = os.path.join(PROGRESS_ROOT, selected_service, selected_level)  # Path to progress files
     if not os.path.isdir(level_path):
         return []
 
@@ -53,25 +53,23 @@ def load_all_progress_files(selected_service, selected_level):
             file_path = os.path.join(level_path, filename)
             try:
                 with open(file_path, "r") as f:
-                    data = json.load(f)
-                    user_id = os.path.splitext(filename)[0]
+                    data = json.load(f)  # Load user progress data
+                    user_id = os.path.splitext(filename)[0]  # Extract user ID from filename
                     user_progress_data.append((user_id, data, selected_service, selected_level))
             except Exception as e:
-                st.warning(f"Failed to load {file_path}: {e}")
+                st.warning(f"Failed to load {file_path}: {e}")  # Warn if file can't be loaded
 
-    return user_progress_data
-
-
+    return user_progress_data  # Return list of user progress entries
 
 def main():
-    st.title("User Progress Dashboard")
+    st.title("User Progress Dashboard")  # Set the page title
 
-    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    services = ["ftp", "ssh", "http"]
-    levels = ["level1", "level2"]
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # Get current directory
+    services = ["ftp", "ssh", "http"]  # List of supported services
+    levels = ["level1", "level2"]  # List of supported levels
 
-    selected_service = st.selectbox("Choose a service:", services)
-    selected_level = st.selectbox("Choose a level:", levels)
+    selected_service = st.selectbox("Choose a service:", services)  # Service selection dropdown
+    selected_level = st.selectbox("Choose a level:", levels)  # Level selection dropdown
 
     if st.button("Select"):
         st.session_state.services = selected_service
@@ -79,42 +77,35 @@ def main():
         st.session_state.exercise_running = True
         st.query_params["exercise"] = selected_service
         st.query_params["level"] = selected_level
-        st.rerun()
+        st.rerun()  # Rerun the app with new selections
 
+    SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../../../"))  # Calculate source directory
+#PROGRESS_DIR = os.path.join(SRC_DIR, "progress", selected_service, selected_level)  # Path to progress directory
 
-    SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../../../"))
-    PROGRESS_DIR = os.path.join(SRC_DIR, "progress", selected_service, selected_level)
+    st.subheader(f"Showing progress for  `{selected_service} / {selected_level}` ")  # Show current selection
 
-    st.subheader(f"Showing progress for  `{selected_service} / {selected_level}` ")
-
-    progress_entries = load_all_progress_files(selected_service, selected_level)
+    progress_entries = load_all_progress_files(selected_service, selected_level)  # Load progress data
 
     if not progress_entries:
-        st.info("No progress data found.")
+        st.info("No progress data found.")  # Inform if no data
         return
 
-    # for user_id, data, protocol, level in progress_entries:
-    #     display_user_progress(data, user_id, protocol, level)
-
-
-    cols = st.columns(2)  # Two cards per row
+    cols = st.columns(2)  # Two columns for displaying user cards
     for idx, (user_id, data, protocol, level) in enumerate(progress_entries):
         with cols[idx % 2]:
-            display_user_progress(data, user_id, protocol, level)
+            display_user_progress(data, user_id, protocol, level)  # Show each user's progress
 
+    st.markdown("### ✅ Completed Users Summary")  # Section for completed users
 
-    st.markdown("### ✅ Completed Users Summary")
-
-    any_completed = False
+    any_completed = False  # Flag to check if any user completed all steps
 
     for protocol, user_ids in list_of_protocols_and_user_ids.items():
         if user_ids:
             any_completed = True
-            st.write(f"**{protocol.upper()}** - {level}  : {'  ,  '.join(user_ids)} \n")
+            st.write(f"**{protocol.upper()}** - {level}  : {'  ,  '.join(user_ids)} \n")  # List completed users
 
     if not any_completed:
-        st.write("No users have completed all steps yet.")
-
+        st.write("No users have completed all steps yet.")  # Inform if none completed
 
 if __name__ == "__main__":
-    main()
+    main()  # Run the Streamlit app

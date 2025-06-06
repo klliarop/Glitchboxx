@@ -1,73 +1,72 @@
 services:
   web:
-    build: .
+    build: .  # Build the web service from the current directory
     ports:
-      - "172.29.0.1:{{ http_port }}:80"
-    networks:
-      isolated_net_http_2:
-        ipv4_address: 172.29.0.10
-    depends_on:
-      - db
-    runtime: runsc
+      - "{{ gateway_ip }}:{{ http_port }}:80"  # Map host port 8080 to container port 80, binding to gateway_ip
+    container_name: web_level2_{{ user_id }}  # Unique container name per user
     environment:
-      - DB_HOST=db
-      - DB_USER=vuln_user
-      - DB_PASS=vuln_pass
-      - DB_NAME=vulnerable_db
+      - DB_HOST={{ db_ip }}  # Database host IP
+      - DB_USER={{ db_user }}  # Database username
+      - DB_PASS={{ db_pass }}  # Database password
+      - MYSQL_DATABASE=ctf   # Database name (used by the web app)
+      #  - DB_NAME=vulnerable_db  # (commented out) alternative DB name
+    depends_on:
+      - db  # Ensure db service starts before web
+    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
+    networks:
+      http_net_{{ user_id }}:
+        ipv4_address: {{ web_ip }}  # Assign static IP to web container
 
   db:
-    image: mysql:5.7
-    restart: always
+    image: mysql:8.0  # Use MySQL 8.0 image
+    restart: always  # Always restart the container on failure
+    container_name: db_level2_{{ user_id }}  # Unique container name per user
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: vulnerable_db
-      MYSQL_USER: vuln_user
-      MYSQL_PASSWORD: vuln_pass
+      - DB_HOST={{ db_ip }}  # Database host IP (not required by MySQL, but passed)
+      - MYSQL_ROOT_PASSWORD={{ db_pass }}  # MySQL root password
+      - MYSQL_DATABASE=ctf  # Database name
+      - MYSQL_USER={{ db_user }}  # MySQL user
+      - MYSQL_PASSWORD={{ db_pass }}  # MySQL user password
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql  # Initialize DB with SQL script
     networks:
-      isolated_net_http_2:
-        ipv4_address: 172.29.0.11
-    runtime: runsc
+      http_net_{{ user_id }}:
+        ipv4_address: {{ db_ip }}  # Assign static IP to db container
+    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
 
   ftp:
-    container_name: ftp-server-2
-    image: garethflowers/ftp-server
+    container_name: ftp_http_level2_{{ user_id }}  # Unique container name per user
+    image: garethflowers/ftp-server  # Use a lightweight FTP server image
     environment:
-      - FTP_USER=anonymous
-      - FTP_PASS=
+      - FTP_USER={{ ftp_user }} # FTP username (anonymous login)
+      - FTP_PASS={{ ftp_pass }}          # No password for anonymous user
     ports:
-      - '172.29.0.1:{{ ftp_port }}:21'
-      - '172.29.0.1:40000-40009:40000-40009'
+      - '{{ gateway_ip }}:{{ ftp_port }}:21/tcp'  # Map host port 21 to container port 21
+      - '{{ gateway_ip }}:40000-40009:40000-40009/tcp'  # Map passive FTP ports
     volumes:
-      - ./shared:/home/anonymous
+      - ./shared:/home/{{ ftp_user }}  # Mount shared directory for FTP user
     networks:
-      isolated_net_http_2:
-        ipv4_address: 172.29.0.12
-    runtime: runsc
+      http_net_{{ user_id }}:
+        ipv4_address: {{ ftp_ip }}  # Assign static IP to ftp container
+    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
 
   traffic_generator:
     build:
-      context: .
-      dockerfile: Dockerfile.traffic
+      context: .  # Build context is the current directory
+      dockerfile: Dockerfile.traffic  # Use a custom Dockerfile for the traffic generator
     depends_on:
-      - web
-
+      - web  # Ensure web service starts before traffic generator
     environment:
-      TARGET_URL: "http://172.29.0.10/index.php"
-      PROXY_URL: "http://172.29.0.10/index.php"
-
-    # environment:
-    #   TARGET_URL: "http://web/index.php"
-    #   PROXY_URL: "http://web/index.php"
+      TARGET_URL: "http://172.29.0.10/index.php"  # Target URL for traffic generation
+      PROXY_URL: "http://172.29.0.10/index.php"   # Proxy URL for traffic generation
     networks:
-      - isolated_net_http_2
-    runtime: runsc
-    
+      http_net_{{ user_id }}:
+        ipv4_address: {{ traffic_ip }}  # Assign static IP to traffic generator container
+    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
+
 networks:
-  isolated_net_http_2:
-    name: isolated_net_http_2 
-    driver: bridge
+  http_net_{{ user_id }}:
+    driver: bridge  # Use bridge network driver
     ipam:
       config:
-        - subnet: 172.29.0.0/16
+        - subnet: {{ subnet }}  # Define subnet for user network

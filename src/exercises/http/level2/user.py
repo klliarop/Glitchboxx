@@ -1,27 +1,25 @@
-import streamlit as st
-import os
-import subprocess
-import time
-import base64
-import yaml
-import json
-import docker
-from docker.errors import NotFound
-from exercises.user_base import UserExerciseBase
-import shutil
+# --- Imports ---
+import streamlit as st  # For web UI
+import os  # For file and path operations
+import subprocess  # To run shell commands (docker, iptables)
+import time  # For sleep/delay
+import base64  # For encoding images to base64
+import yaml  # For parsing YAML files (docker-compose)
+import json  # For JSON config and progress files
+import docker  # Docker SDK for Python
+from docker.errors import NotFound  # Exception for missing Docker objects
+from exercises.user_base import UserExerciseBase  # Base class for exercises
+from pathlib import Path  # For path manipulations
+from jinja2 import Template  # For templating docker-compose files
 
+# --- Path and Directory Setup ---
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # Current file's directory
+SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../../"))  # Project root
+PROGRESS_DIR = os.path.join(SRC_DIR, "progress", "http", "level2")  # Progress files directory
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-SRC_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../../../"))
-PROGRESS_DIR = os.path.join(SRC_DIR, "progress", "http", "level2")
-start_dir = os.path.join(CURRENT_DIR, "shared")
-DOCKER_COMPOSE_PATH = os.path.join(CURRENT_DIR, "docker-compose.yml")
-
-USERS_FILE = os.path.join(CURRENT_DIR, "state", "users.json")
-os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
-
-
+# --- Main Exercise Class ---
 class HTTPLevel2User(UserExerciseBase):
+    # Set Streamlit background image using a file from wallpapers directory
     def set_background(self, image_file):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         wallpapers_dir = os.path.join(base_dir, "../../../wallpapers")
@@ -44,97 +42,147 @@ class HTTPLevel2User(UserExerciseBase):
         except FileNotFoundError:
             st.error(f"Background image not found at: {image_path}")
 
-
+    # Start a Docker container for a user, using a rendered docker-compose template
     def start_container_for_user(self, user_id):
-        users = self._load_users()
+        base_dir = os.path.dirname(__file__)
+        # Path to Jinja2 docker-compose template
+        template_path = os.path.join(base_dir, "../../templates/http_docker_compose_2.j2")
+        # Path for the user's docker-compose file
+        compose_path = os.path.join(base_dir, f"docker-compose-{user_id}.yml")
 
-        if not users:
-            subprocess.run(["docker", "compose", "build"], cwd=CURRENT_DIR, check=True)
-            subprocess.run(["docker", "compose", "up", "-d"], cwd=CURRENT_DIR, check=True)
-      
-       # ip = self.get_container_ip(user_id)
+        # Load admin config (FTP/DB credentials, etc.)
+        config_path = Path(base_dir).parent.parent / "templates/json_configs/http_level2.json"
+        with open(config_path) as f:
+            config = json.load(f)
 
-        users.add(user_id)
-        self._save_users(users)
-        time.sleep(15)  # Less sleep if startup is fast
+        # Find a free subnet and assign IPs for services
+        subnet = self._find_free_subnet()
+        print("DEBUG: subnet value:", subnet, type(subnet))
+        base_ip = subnet.split('/')[0]  # e.g., "172.28.5.0"
+        print(base_ip)
+        parts = base_ip.split('.')
+        web_ip = f"{parts[0]}.{parts[1]}.{parts[2]}.10"
+        db_ip = f"{parts[0]}.{parts[1]}.{parts[2]}.11"
+        ftp_ip = f"{parts[0]}.{parts[1]}.{parts[2]}.12"
+        traffic_ip = f"{parts[0]}.{parts[1]}.{parts[2]}.13"
+        gateway_ip = f"{parts[0]}.{parts[1]}.{parts[2]}.1"
 
-        return '172.29.0.1'  # actual container and IP
+        # Render docker-compose.yml for this user using the template
+        with open(template_path) as f:
+            template = Template(f.read())
+        rendered = template.render(
+            user_id=user_id,
+            subnet=subnet,
+            web_ip=web_ip,
+            db_ip=db_ip,
+            ftp_ip=ftp_ip,
+            traffic_ip=traffic_ip,
+            gateway_ip=gateway_ip,
+            db_user=config.get("db_user", "ctfuser"),
+            db_pass=config.get("db_pass", "ctfpass"),
+            ftp_user=config.get("ftp_user", "ftpuser"),
+            ftp_pass=config.get("ftp_pass", "ftppass"),
+            http_port=config.get("http_port", "8080"),
+            ftp_port=config.get("ftp_port", "21")
+        )
 
+        print("Gateway IP:", gateway_ip)
 
-    def stop_container_for_user(self, user_id):
-        users = self._load_users()
-        users.discard(user_id)
+        # Write the rendered docker-compose file
+        with open(compose_path, "w") as f:
+            f.write(rendered)
 
-        if not users:
-            subprocess.run(["docker", "compose", "down"], cwd=CURRENT_DIR, check=True)
+        # Stop any existing containers for this user (ignore errors)
+        subprocess.run([
+            "docker", "compose", "-p", f"level2_{user_id}", "-f", compose_path, "down", "-v"
+        ], check=False)
+        # Start up the containers
+        subprocess.run([
+            "docker", "compose", "-p", f"level2_{user_id}", "-f", compose_path, "up", "-d"
+        ], check=True)
+
+        time.sleep(20)  # Wait for containers to be ready
         
+        # Return the gateway IP and subnet for this user's container
+        return gateway_ip, subnet
 
-        self._save_users(users)
+    # Stop and remove the user's Docker container and compose file
+    def stop_container_for_user(self, user_id):
+        base_dir = os.path.dirname(__file__)
+        compose_path = os.path.join(base_dir, f"docker-compose-{user_id}.yml")
+        try:
+            subprocess.run(["docker", "compose","-p", f"level2_{user_id}","-f", compose_path,"down", "-v"], check=True)
+            os.remove(compose_path)
+        except subprocess.CalledProcessError as e:
+            pass
 
-
-
+    # Get the subnet for the user's Docker network
     def get_container_ip(self, user_id):
         try:
-            # Step 1: Load the docker-compose.yml
-            with open(DOCKER_COMPOSE_PATH, 'r') as f:
+            compose_path = os.path.join(os.path.dirname(__file__), f"docker-compose-{user_id}.yml")
+
+            with open(compose_path, 'r') as f:
                 compose_data = yaml.safe_load(f)
 
-            # Step 2: Try to get network name from top-level networks
-            network_name = None
-            networks = compose_data.get('networks', {})
-            if networks:
-                network_name = list(networks.keys())[0]
-            else:
-                # Fallback: try to find network from services section
-                services = compose_data.get('services', {})
-                for service in services.values():
-                    service_networks = service.get('networks')
-                    if service_networks:
-                        if isinstance(service_networks, list):
-                            network_name = service_networks[0]
-                        elif isinstance(service_networks, dict):
-                            network_name = list(service_networks.keys())[0]
-                        break
+            # Extract the network name (first one if multiple)
+            network_name = list(compose_data.get('networks', {}).keys())[0]
 
-            if not network_name:
-                print("No network found in docker-compose.yml")
+            # Compose project name for this user
+            project_name = f"level2_{user_id}"
+            full_network_name = f"{project_name}_{network_name}"
+
+            docker_client = docker.from_env()
+            network = docker_client.networks.get(full_network_name)
+            ipam_config = network.attrs.get("IPAM", {}).get("Config", [])
+
+            if not ipam_config:
                 return None
 
-            # Step 3: Use docker network inspect to get gateway
-            result = subprocess.run(
-                ["docker", "network", "inspect", network_name],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            network_info = json.loads(result.stdout)
-            return network_info[0]["IPAM"]["Config"][0].get("Gateway")
+            subnet = ipam_config[0].get("Subnet")
+            gateway_ip = ipam_config[0].get("Gateway")
 
+            if not gateway_ip and subnet:
+                parts = subnet.split('/')[0].split('.')
+                parts[-1] = '1'
+                gateway_ip = '.'.join(parts)
+
+            print(f"[DEBUG] Network info for {user_id} → Subnet: {subnet}, Gateway: {gateway_ip}")
+            return subnet
+
+        except docker.errors.NotFound:
+            print(f"[ERROR] Network not found for user {user_id}")
+            return None
         except Exception as e:
-            print(f"Error getting network gateway: {e}")
+            print(f"[ERROR] Unexpected error: {e}")
             return None
 
 
-
-
+    # Add iptables rules to allow VPN IP <-> container IP communication
     def add_firewall_rules(self, vpn_ip, container_ip):
-        subprocess.run(["sudo","/usr/sbin/iptables", "-I", "DOCKER-USER", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
-        subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "DOCKER-USER", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
-        subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "INPUT", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
-        subprocess.run(["sudo", "/usr/sbin/iptables", "-t", "raw", "-I", "PREROUTING", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
+        print(f"Adding precise firewall rules for {vpn_ip} → {container_ip}")
+        # Allow VPN IP to container IP
+        subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "DOCKER-USER", "1","-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
+        # Allow return traffic from container to VPN IP
+        subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "DOCKER-USER", "1","-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
 
-    def remove_firewall_rules(self, vpn_ip, container_ip):
-        subprocess.run(["sudo", "/usr/sbin/iptables","-D", "DOCKER-USER", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
-        subprocess.run(["sudo", "/usr/sbin/iptables","-D", "DOCKER-USER", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"],check=True)
-        subprocess.run(["sudo", "/usr/sbin/iptables","-D", "INPUT", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"],check=True)
-        subprocess.run(["sudo", "/usr/sbin/iptables","-t", "raw", "-D", "PREROUTING", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"],check=True)
-        subprocess.run(["sudo", "/usr/sbin/iptables","-D", "FORWARD", "-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"],check=True)
-        subprocess.run(["sudo", "/usr/sbin/iptables", "-D", "FORWARD", "-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"],check=True)
-    
+    # Remove iptables rules for VPN IP <-> container IP
+    def remove_firewall_rules(self , vpn_ip, container_ip):
+        print(f"Removing firewall rules for {vpn_ip} ↔ {container_ip}")
+        try:
+            # Remove rule: container to VPN
+            subprocess.run(["sudo", "/usr/sbin/iptables", "-D", "DOCKER-USER","-s", container_ip, "-d", vpn_ip, "-o", "wg0", "-j", "ACCEPT"], check=True)
+            print(f"Removed: -s {container_ip} -d {vpn_ip} -o wg0 -j ACCEPT")
+            # Remove rule: VPN to container
+            subprocess.run(["sudo", "/usr/sbin/iptables", "-D", "DOCKER-USER","-s", vpn_ip, "-d", container_ip, "-i", "wg0", "-j", "ACCEPT"], check=True)
+            print(f"Removed: -s {vpn_ip} -d {container_ip} -i wg0 -j ACCEPT")
+        except subprocess.CalledProcessError as e:
+            print("Error removing rule:", e)
 
+    # Get the path to the user's progress file
     def get_user_progress_file(self, user_id):
         return os.path.join(PROGRESS_DIR, f"{user_id}.json")
 
+    # Save the user's progress to a file
     def save_progress(self, user_id, user_progress):
         user_file = self.get_user_progress_file(user_id)
         try:
@@ -143,11 +191,13 @@ class HTTPLevel2User(UserExerciseBase):
         except Exception as e:
             st.error(f"Error saving progress for {user_id}: {e}")
 
+    # Initialize a new progress dictionary for a user
     def initialize_progress(self, user_id):
         progress = {f"step{i}": False for i in range(1, 10)}
         progress["completed"] = False
         return progress
 
+    # Load the user's progress from file, or initialize if not found
     def load_progress(self, user_id):
         user_file = self.get_user_progress_file(user_id)
         if os.path.exists(user_file):
@@ -160,6 +210,7 @@ class HTTPLevel2User(UserExerciseBase):
         else:
             return self.initialize_progress(user_id)
 
+    # Validate username:password input for a step and update progress
     def validate_credentials(self, user_id, step_num, question_text, correct_username, correct_password):
         st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
         with st.form(key=f"user_{user_id}_step{step_num}_form"):
@@ -185,6 +236,7 @@ class HTTPLevel2User(UserExerciseBase):
                 else:
                     st.error("Invalid format! Use 'username:password'")
 
+    # Validate a text answer for a step and update progress
     def validate_and_update_step(self, user_id, step_num, question_text, placeholder, correct_answer):
         st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
         with st.form(key=f"user_{user_id}_step{step_num}_form"):
@@ -202,33 +254,11 @@ class HTTPLevel2User(UserExerciseBase):
                 else:
                     st.error("Wrong answer!")
 
-    # def validate_flag_step(self, user_id, step_num, question_text, placeholder, flag_file_relative):
-    #     st.markdown(f"<h5 style='color: white;'><br>{question_text}</h5>", unsafe_allow_html=True)
-    #     with st.form(key=f"user_{user_id}_step{step_num}_form"):
-    #         col1, col2 = st.columns([2, 1])
-    #         with col1:
-    #             user_answer = st.text_input(" ", placeholder=placeholder, key=f"user_{user_id}_step{step_num}_input", autocomplete="off")
-    #         with col2:
-    #             st.markdown("<br>", unsafe_allow_html=True)
-    #             submit_button = st.form_submit_button("Submit")
-    #         if submit_button:
-    #             flag_file_path = os.path.join(start_dir, flag_file_relative)
-    #             if flag_file_path and os.path.exists(flag_file_path):
-    #                 with open(flag_file_path, "r") as file:
-    #                     correct_flag = file.read().strip()
-    #                 if user_answer.strip() == correct_flag:
-    #                     st.session_state.user_progress[f"step{step_num}"] = True
-    #                     self.save_progress(user_id, st.session_state.user_progress)
-    #                     st.success("Correct!")
-    #                 else:
-    #                     st.error("Wrong flag!")
-    #             else:
-    #                 st.error("Flag file not found.")
-
-
+    # Placeholder for flag validation step
     def validate_flag_step(self, user_id, step_num, question_text, placeholder, flag_file_relative):
         pass
 
+    # Parse WireGuard config to get VPN IP for a user
     def get_vpn_ip_for_user(self, user_id, config_path="/etc/wireguard/wg0.conf"):
         vpn_map = {}
         current_user_id = None
@@ -247,46 +277,41 @@ class HTTPLevel2User(UserExerciseBase):
             print(f"Error reading VPN config: {e}")
             return None
 
-    # Helper functions for managing the list of currently active users 
-    def _load_users(self):
-        if os.path.exists(USERS_FILE):
-            with open(USERS_FILE, "r") as f:
-                return set(json.load(f))
-        return set()
+    # Find a free /24 subnet in the 172.29.X.0/24 range not used by Docker
+    def _find_free_subnet(self, base="172.29", start=2, end=255):
+        client = docker.from_env()
+        used_subnets = set()
+        for net in client.networks.list():
+            ipam = net.attrs.get("IPAM", {}).get("Config")
+            if not ipam:
+                continue  # skip if Config is None or empty
+            for cfg in ipam:
+                subnet = cfg.get("Subnet")
+                if subnet:
+                    used_subnets.add(subnet)
+        for i in range(start, end):
+            subnet = f"{base}.{i}.0/24"
+            if subnet not in used_subnets:
+                return subnet
+        raise RuntimeError("No free subnet found in range.")
 
-    def _save_users(self, users):
-        with open(USERS_FILE, "w") as f:
-            json.dump(list(users), f)
-
-
-    # def get_container_for_user(self, user_id):
-    #     pass
-
-
-
-
+# --- Main Streamlit App Logic ---
 def main(user_id):
     user = HTTPLevel2User()
     user.set_background('back_http.jpg')
 
+    # Ensure progress directory exists
     if not os.path.exists(PROGRESS_DIR):
         os.makedirs(PROGRESS_DIR)
 
+    # Load user progress into session state
     if "user_progress" not in st.session_state:
         st.session_state.user_progress = user.load_progress(user_id)
 
+    # Display exercise title
     st.markdown(f"<h1 style='color: white;'>BankSploit</h1>", unsafe_allow_html=True)
 
-    # st.markdown("""
-    #     <p style='font-size:20px; color:white;'>
-    #     You have successfully entered a restricted internal network believed 
-    #     to host a bank’s private servers. The bank's defenses are outdated exposing 
-    #     sensitive data in plaintext. Your mission is to intercept communication 
-    #     between clients and the server and find some way to steal money. 
-    #     </p>
-    # """, unsafe_allow_html=True)
-#generational wealth, one packet at a time. ......retirement from a life of crime.
-
+    # Display exercise introduction
     st.markdown("""
         <p style='font-size:20px; color:white;'>
         You’ve infiltrated a private network long rumored to launder high-value Renaissance artworks — including a few allegedly painted by Da Vinci himself —
@@ -297,27 +322,33 @@ def main(user_id):
         </p>
     """, unsafe_allow_html=True)
 
-
+    # Start Exercise button logic
     if st.button("Start Exercise", key="start_exercise"):
         status_placeholder = st.empty()
         status_placeholder.info("This process might take a moment...  ")
 
+        # Reset user progress
         st.session_state.user_progress = user.initialize_progress(user_id)
         user.save_progress(user_id, st.session_state.user_progress)
         try:
-            container_ip = user.start_container_for_user(user_id)
+            # Start the user's container and get IPs
+            container_ip, subnet = user.start_container_for_user(user_id)
+            print("container_ip: (what the start returns - gateway)", container_ip)
             vpn_ip = user.get_vpn_ip_for_user(user_id)
-            print(vpn_ip, container_ip)
+            print("vpn_ip: (what the get_vpn_ip returns)", vpn_ip)
             if not vpn_ip:
                 st.error("VPN IP for your session could not be found. Contact admin.")
                 return
             st.session_state["container_ip"] = container_ip
             st.session_state["vpn_ip"] = vpn_ip
-            user.add_firewall_rules(vpn_ip, container_ip)
+
+            # Add firewall rules for this session
+            user.add_firewall_rules(vpn_ip, subnet)
+
         except subprocess.CalledProcessError as e:
             st.error(f"Error restarting Docker container: {e}")
 
-
+    # Show server IP if container is running
     if "container_ip" in st.session_state:
         st.markdown(f"""
         <div style="
@@ -340,11 +371,11 @@ def main(user_id):
         </div>
         """, unsafe_allow_html=True)
 
+    # Set default container_ip if not set
     if "container_ip" not in st.session_state:
         st.session_state.container_ip = "none - Press start exercise to continue"
 
-
-    # Question and answer validation for each step with placeholders
+    # Question and answer validation for each step
     user.validate_and_update_step(user_id, 1, "1. How many open ports are on the server?", "*", "2")
     user.validate_and_update_step(user_id, 2, "2. What tool allows you to capture raw network packets, visualize traffic flow in real time, and apply filters to analyze protocols?", "w********", "wireshark")
     user.validate_and_update_step(user_id, 3, "3. What network protocol is used together with HTTP to provide reliable communication and handle acknowledgments, as seen in the server's communication?", "***", "tcp")
@@ -356,7 +387,6 @@ def main(user_id):
     user.validate_and_update_step(user_id, 9, "9. If you made a successful transfer, enter the flag:5", "Flag here...", "7a5f8d3e1c9b24680a42d59")
    
     # --- Completion Check and Message ---
-
     all_steps_completed = all(st.session_state.user_progress.get(f"step{i}", False) for i in range(1, 10))
 
     if all_steps_completed and not st.session_state.user_progress["completed"]:
@@ -369,6 +399,7 @@ def main(user_id):
             <p style='text-align: center; font-size: 24px;'>You completed this exercise!</p>
         """, unsafe_allow_html=True)
 
+    # Stop Exercise button logic
     if st.button("Stop Exercise"):
         try:
             vpn_ip = st.session_state.get("vpn_ip") or user.get_vpn_ip_for_user(user_id)
@@ -377,7 +408,8 @@ def main(user_id):
                 st.warning("No active exercise to stop.")
                 return
             try:
-                user.remove_firewall_rules(vpn_ip, container_ip)
+                subnet = user.get_container_ip(user_id)
+                user.remove_firewall_rules(vpn_ip, subnet)
             except subprocess.CalledProcessError as e:
                 print(f"[DEBUG] Failed to remove firewall rules: {e}")
             try:
@@ -394,6 +426,6 @@ def main(user_id):
         if os.path.exists(user_progress_file):
             os.remove(user_progress_file)
 
+# Run the main function if this file is executed directly
 if __name__ == "__main__":
     main("test_user")
-
