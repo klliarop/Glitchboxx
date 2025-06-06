@@ -27,7 +27,7 @@ This project provides a **Cyber Range Sandbox** for security exercises and a ful
 ## Project Structure
 
 ```
-Glitsboxx/
+Glitchboxx/
 ├── data/
 │   ├── users.db
 │   └── admins.db
