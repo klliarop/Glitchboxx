@@ -1,6 +1,3 @@
-Certainly! Here’s a **comprehensive README** that combines your WireGuard VPN server setup, the cyber range sandbox, and all relevant prerequisites, setup, and usage instructions. This README is structured for clarity and professionalism, suitable for your GitHub repository.
-
----
 
 # Cyber Range Sandbox & WireGuard VPN Server
 
