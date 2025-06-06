@@ -39,7 +39,7 @@ Glitchboxx/
 ├── venv/
 ├── wireguard-vpn-server/
 │   ├── .env
-│   ├── env.example      # <--- You should add this!
+│   ├── env.example      
 │   ├── scripts/
 │   │   ├── setup_wireguard.sh
 │   │   ├── restart_wg.sh
