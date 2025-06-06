@@ -74,6 +74,7 @@ Glitchboxx/
 - **Root or sudo access** for VPN and firewall setup
 - **Python 3.6+** (3.8 recommended)
 - **Docker** and **Docker Compose**
+- **gVisor** (see below for installation)
 - **Wireshark** (optional, for PCAP analysis)
 - **WireGuard** (installed automatically by setup script)
 
@@ -145,7 +146,53 @@ This will:
 - Run all firewall and iptables scripts
 - Bring up the interface
 
+### 7. Installing Docker, Docker Compose & gVisor
+
+#### **Install Docker**
+
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+```
+
+*Optional: Add your user to the docker group to run Docker without sudo (log out and back in for this to take effect):*
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+#### **Install Docker Compose (v2+)**
+
+```bash
+sudo apt-get update
+sudo apt-get install -y docker-compose-plugin
+```
+
+#### **Install gVisor**
+
+```bash
+# Download and install runsc (gVisor runtime)
+GVISOR_VERSION=$(curl -s https://api.github.com/repos/google/gvisor/releases/latest | grep tag_name | cut -d '"' -f 4)
+wget https://storage.googleapis.com/gvisor/releases/release/${GVISOR_VERSION}/runsc
+chmod +x runsc
+sudo mv runsc /usr/local/bin
+
+# (Optional) Install containerd-shim-runsc-v1 for containerd integration
+wget https://storage.googleapis.com/gvisor/releases/release/${GVISOR_VERSION}/containerd-shim-runsc-v1
+chmod +x containerd-shim-runsc-v1
+sudo mv containerd-shim-runsc-v1 /usr/local/bin
+```
+
 ---
+
+#### **Verify Installation**
+
+```bash
+docker --version
+docker compose version
+runsc --version
+```
+
 
 ## Running the Application
 
