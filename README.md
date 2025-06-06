@@ -27,19 +27,7 @@ This project provides a **Cyber Range Sandbox** for security exercises and a ful
 ## Project Structure
 
 ```
-wireguard-vpn-server/
-├── env.example
-├── .env
-├── scripts/
-│   ├── setup_wireguard.sh
-│   ├── restart_wg.sh
-│   ├── a_reset_firewall.sh
-│   ├── iptables_reset.sh
-│   └── up.sh
-├── wireguard/
-│   ├── server_private.key
-│   ├── server_public.key
-│   └── wg0.conf
+Glitsboxx/
 ├── data/
 │   ├── users.db
 │   └── admins.db
@@ -48,9 +36,23 @@ wireguard-vpn-server/
 │   │   └── wg.py
 │   └── challenges/
 │       └── admin.py
-├── requirements.txt
+├── venv/
+├── wireguard-vpn-server/
+│   ├── .env
+│   ├── env.example      # <--- You should add this!
+│   ├── scripts/
+│   │   ├── setup_wireguard.sh
+│   │   ├── restart_wg.sh
+│   │   ├── a_reset_firewall.sh
+│   │   ├── iptables_reset.sh
+│   │   └── up.sh
+│   └── wireguard/
+│       ├── server_private.key
+│       ├── server_public.key
+│       └── wg0.conf
+├── .gitignore
 ├── README.md
-└── LICENSE
+├── requirements.txt
 ```
 
 ---
