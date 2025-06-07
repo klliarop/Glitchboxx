@@ -86,7 +86,7 @@ Glitchboxx/
 
 ```bash
 git clone https://github.com/klliarop/Glitchboxx.git
-cd wireguard-vpn-server
+cd Glitchboxx/wireguard-vpn-server
 ```
 
 ---
@@ -94,6 +94,7 @@ cd wireguard-vpn-server
 ### 2. Python Virtual Environment
 
 ```bash
+sudo apt-get install python3-venv
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -104,6 +105,7 @@ source venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+pip install --upgrade pip
 ```
 
 ---

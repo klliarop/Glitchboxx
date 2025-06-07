@@ -6,7 +6,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_PATH="$SCRIPT_DIR/../.env"
 
 if [ -f "$ENV_PATH" ]; then
-    export $(grep -v '^#' "$ENV_PATH" | xargs)
+    set -a
+    source "$ENV_PATH"
+    set +a
 else
     echo "Missing .env file!"
     exit 1
