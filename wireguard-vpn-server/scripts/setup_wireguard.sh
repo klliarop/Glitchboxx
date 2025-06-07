@@ -25,8 +25,8 @@ sudo apt install -y wireguard
 if [ -z "$WG_SERVER_PRIVATE_KEY" ] || [ -z "$WG_SERVER_PUBLIC_KEY" ]; then
     WG_SERVER_PRIVATE_KEY=$(wg genkey)
     WG_SERVER_PUBLIC_KEY=$(echo "$WG_SERVER_PRIVATE_KEY" | wg pubkey)
-    echo "WG_SERVER_PRIVATE_KEY=$WG_SERVER_PRIVATE_KEY" >> /home/user/.env
-    echo "WG_SERVER_PUBLIC_KEY=$WG_SERVER_PUBLIC_KEY" >> /home/user/.env
+    echo "WG_SERVER_PRIVATE_KEY=$WG_SERVER_PRIVATE_KEY" >> "$ENV_PATH"
+    echo "WG_SERVER_PUBLIC_KEY=$WG_SERVER_PUBLIC_KEY" >> "$ENV_PATH"
 fi
 
 WG_CONFIG="/etc/wireguard/wg0.conf"
@@ -35,7 +35,8 @@ sudo bash -c "cat > $WG_CONFIG <<EOF
 PrivateKey = $WG_SERVER_PRIVATE_KEY
 Address = $WG_SERVER_ADDRESS
 ListenPort = $WG_SERVER_PORT
-SaveConfig = true
+PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
 # Add your peer configurations here
 EOF"
