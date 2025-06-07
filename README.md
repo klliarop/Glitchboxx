@@ -86,7 +86,8 @@ Glitchboxx/
 
 ```bash
 git clone https://github.com/klliarop/Glitchboxx.git
-cd Glitchboxx/wireguard-vpn-server
+cd Glitchboxx/wireguard-vpn-server/
+
 ```
 
 ---
@@ -104,6 +105,7 @@ source venv/bin/activate
 ### 3. Install Python Dependencies
 
 ```bash
+cd ..
 pip install -r requirements.txt
 pip install --upgrade pip
 ```
