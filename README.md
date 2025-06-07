@@ -86,16 +86,16 @@ Glitchboxx/
 
 ```bash
 git clone https://github.com/klliarop/Glitchboxx.git
-cd Glitchboxx/wireguard-vpn-server/
+cd Glitchboxx/
 
 ```
 
 ---
 
-### 2. Python Virtual Environment
+### 2. Python Virtual Environment  (Using Python 3.12)
 
 ```bash
-sudo apt-get install python3-venv
+sudo apt-get install python3.12 python3.12-venv python3.12-dev
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -105,9 +105,8 @@ source venv/bin/activate
 ### 3. Install Python Dependencies
 
 ```bash
-cd ..
-pip install -r requirements.txt
 pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
 ---
