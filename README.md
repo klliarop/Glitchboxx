@@ -122,6 +122,7 @@ Otherwise, the application will create new ones on first run.
 Copy the example file and edit it:
 
 ```bash
+cd wireguard-vpn-server/
 cp env.example .env
 nano .env
 ```
@@ -136,7 +137,6 @@ nano .env
 Make scripts executable and run the setup:
 
 ```bash
-cd wireguard-vpn-server/
 chmod +x scripts/*.sh
 sudo scripts/setup_wireguard.sh
 ```
