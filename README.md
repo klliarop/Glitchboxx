@@ -127,8 +127,7 @@ cp env.example .env
 nano .env
 ```
 
-- **Set your public IP** for `WG_SERVER_ENDPOINT`
-- Leave keys blank; the setup script will generate them if missing.
+- **Set your public IP** for `WG_SERVER_ENDPOINT` and `VPN_BACKEND_URL`
 
 ---
 

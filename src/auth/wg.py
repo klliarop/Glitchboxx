@@ -8,7 +8,6 @@ import traceback  # For printing stack traces on errors
 from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), "../../wireguard-vpn-server/.env"))
 
-
 app = Flask(__name__)  # Initialize Flask app
 
 # Directory for storing generated client configs (not used for per-user tracking)
@@ -124,7 +123,7 @@ AllowedIPs = {client_ip}/32
     with open(SERVER_WG_CONFIG, "a") as f:
         f.write(peer_entry)
     # Restart WireGuard service using a shell script
-    RESTART_WG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "wireguard", "restart_wg.sh"))
+    RESTART_WG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "wireguard-vpn-server", "scripts", "restart_wg.sh"))
     subprocess.Popen([RESTART_WG_PATH])
     return filepath
 
@@ -182,7 +181,7 @@ def remove_config():
         with open(SERVER_WG_CONFIG, "w") as f:
             f.writelines(new_lines)
         # Restart WireGuard service using a hardcoded script path
-        RESTART_WG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "wireguard", "restart_wg.sh"))
+        RESTART_WG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "wireguard-vpn-server", "scripts", "restart_wg.sh"))
         subprocess.Popen([RESTART_WG_PATH])
     config_file = os.path.join(CONFIG_DIR, f"client_wg.conf")
     if os.path.exists(config_file):

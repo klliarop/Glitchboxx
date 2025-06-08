@@ -4,6 +4,10 @@ set -e
 echo "[+] Enabling IP forwarding..."
 sysctl -w net.ipv4.ip_forward=1
 
+# Ensure DOCKER-USER chain exists (Docker creates it, but if not, we do)
+echo "[+] Ensuring DOCKER-USER chain exists..."
+iptables -N DOCKER-USER 2>/dev/null || true
+
 VPN_NET="10.9.0.0/24"
 DOCKER_NET1="172.18.0.0/16"
 DOCKER_NET2="172.28.0.0/16"

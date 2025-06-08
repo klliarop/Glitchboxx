@@ -8,9 +8,11 @@ WG_IFACE="wg0"
 DOCKER_NETS=("172.18.0.0/16" "172.28.0.0/16" "172.29.0.0/16")
 DOCKER_GATEWAYS=("172.28.0.1" "172.29.0.1")
 
-# Flush DOCKER-USER chain
+echo "[*] Ensuring DOCKER-USER chain exists..."
+iptables -N DOCKER-USER 2>/dev/null || true
+
 echo "[*] Flushing DOCKER-USER chain..."
-iptables -F DOCKER-USER
+iptables -F DOCKER-USER 2>/dev/null || true
 
 # Delete wg0-related rules from FORWARD (reverse order by line number)
 echo "[*] Removing wg0-related rules from FORWARD chain..."
