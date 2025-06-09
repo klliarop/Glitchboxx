@@ -115,3 +115,7 @@ if up_script.exists():
     subprocess.run(["sudo", "bash", str(up_script)], check=True)
 else:
     print("up.sh not found at:", up_script)
+
+# allowing adm group to have read access to get vpn ips of users on the user.py files
+sudo chown root:adm /etc/wireguard/wg0.conf
+sudo chmod 640 /etc/wireguard/wg0.conf
