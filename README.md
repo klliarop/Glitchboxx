@@ -122,9 +122,10 @@ Otherwise, the application will create new ones on first run.
 Copy the example file and edit it:
 
 ```bash
-cd wireguard-vpn-server/
-cp env.example .env
-nano .env
+cd wireguard/
+nano wg_config.json # CHANGE PUBLIC IP
+sudo chmod +x setup_wg.py
+sudo ./setup_wg.py
 ```
 
 - **Set your public IP** for `WG_SERVER_ENDPOINT` and `VPN_BACKEND_URL`

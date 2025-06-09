@@ -4,21 +4,24 @@ import importlib  # For dynamic module import
 import os  # For file and path operations
 import base64  # For encoding images to base64 for backgrounds
 import sys  # For manipulating the Python path
+import json
 
+#This process was placed into funcion as it was executed before the import of streamlit, which caused an error
+def get_vpn_server_ip():
+    try:
+        config_path = os.path.join(os.path.dirname(__file__), '..', 'wireguard', 'wg_config.json')
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+        return config.get("WG_SERVER_PUBLIC_IP", "127.0.0.1")
+    except Exception as e:
+        print(f"[ERROR] Could not read wg_config.json: {e}")
+        return "127.0.0.1"
 
-#import glob  # For file pattern matching (not used in this file)
-
-# import subprocess  # For running subprocesses (not used in this file)
-
-from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(__file__), "../wireguard-vpn-server/.env"))
 
 # Base URLs for backend services
 BASE_URL_LOGIN = "http://127.0.0.1:5001"  # Login service
 BASE_URL_REGISTER = "http://127.0.0.1:5002"  # Registration service
-#BASE_URL_VPN = "http://127.0.0.1:5003"
-#BASE_URL_VPN = "http://192.168.1.241:5003"   # VPN service (LAN IP for external access)
-BASE_URL_VPN = os.getenv("VPN_BACKEND_URL")
+BASE_URL_VPN = f"http://{get_vpn_server_ip()}:5003"
 
 # Add project root to Python path for module imports
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

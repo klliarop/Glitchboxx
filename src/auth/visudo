@@ -69,3 +69,4 @@ user ALL=(ALL) NOPASSWD: /bin/systemctl
 user ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart wg-quick@wg0.service
 user ALL=(ALL) NOPASSWD: /usr/bin/systemctl
 
+liaropou ALL=(ALL) NOPASSWD: /bin/systemctl, /usr/bin/wg, /usr/bin/wg-quick, /usr/sbin/iptables

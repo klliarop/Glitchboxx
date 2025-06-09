@@ -2,30 +2,22 @@ from flask import Flask, request, jsonify, send_file  # Import Flask and related
 import os  # For file and path operations
 import subprocess  # For running shell commands
 import traceback  # For printing stack traces on errors
-
-
-
-from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(__file__), "../../wireguard-vpn-server/.env"))
+import json  # For handling JSON data
 
 app = Flask(__name__)  # Initialize Flask app
 
+config_path = os.path.join(os.path.dirname(__file__), '..', '..', 'wireguard', 'wg_config.json')
+with open(config_path) as f:
+    config = json.load(f)
+
+SERVER_PUBLIC_KEY = config["WG_SERVER_PUB_KEY"]
+SERVER_ENDPOINT = f"{config['WG_SERVER_PUBLIC_IP']}:{config['WG_SERVER_PORT']}"
+
+
 # Directory for storing generated client configs (not used for per-user tracking)
 CONFIG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "configs"))
-
-# # Server WireGuard config and parameters (replace with actual values in production)
-# SERVER_WG_CONFIG = "/etc/wireguard/wg0.conf"
-# SERVER_PUBLIC_KEY = "rHrtQ4y6KGYvm5L9Q+8lWdB+1Oj1IXKxyJn4NTcB3Hs="  # Replace this!
-# SERVER_ENDPOINT = "192.168.1.241:51820"  # Replace this!
-# BASE_IP = "10.9.0."
-
 SERVER_WG_CONFIG = "/etc/wireguard/wg0.conf"
-SERVER_PUBLIC_KEY = os.getenv("WG_SERVER_PUBLIC_KEY")
-SERVER_ENDPOINT = os.getenv("WG_SERVER_ENDPOINT")
-ALLOWED_IPS = os.getenv("WG_ALLOWED_IPS")
-BASE_IP = os.getenv("WG_SERVER_ADDRESS").rsplit('.', 1)[0] + '.'
-
-
+BASE_IP = "10.9.0."
 
 # Ensure config directory exists
 if not os.path.exists(CONFIG_DIR):
@@ -93,22 +85,10 @@ DNS = 1.1.1.1
 [Peer]
 PublicKey = {SERVER_PUBLIC_KEY}
 Endpoint = {SERVER_ENDPOINT}
-AllowedIPs = {ALLOWED_IPS}
+AllowedIPs = 172.18.0.0/16, 172.28.0.0/16, 172.29.0.0/16, 10.9.0.0/24
 PersistentKeepalive = 25
 """
 
-
-#     config = f"""[Interface]
-# PrivateKey = {private_key}
-# Address = {client_ip}/24
-# DNS = 1.1.1.1
-
-# [Peer]
-# PublicKey = {SERVER_PUBLIC_KEY}
-# Endpoint = {SERVER_ENDPOINT}
-# AllowedIPs = 172.18.0.0/16, 172.28.0.0/16, 172.29.0.0/16, 10.9.0.0/24
-# PersistentKeepalive = 25
-# """
     filepath = os.path.join(CONFIG_DIR, f"client_wg.conf")
     with open(filepath, "w") as f:
         f.write(config)
@@ -123,7 +103,7 @@ AllowedIPs = {client_ip}/32
     with open(SERVER_WG_CONFIG, "a") as f:
         f.write(peer_entry)
     # Restart WireGuard service using a shell script
-    RESTART_WG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "wireguard-vpn-server", "scripts", "restart_wg.sh"))
+    RESTART_WG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "wireguard", "restart_wg.sh"))
     subprocess.Popen([RESTART_WG_PATH])
     return filepath
 
@@ -181,7 +161,7 @@ def remove_config():
         with open(SERVER_WG_CONFIG, "w") as f:
             f.writelines(new_lines)
         # Restart WireGuard service using a hardcoded script path
-        RESTART_WG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "wireguard-vpn-server", "scripts", "restart_wg.sh"))
+        RESTART_WG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "wireguard", "restart_wg.sh"))
         subprocess.Popen([RESTART_WG_PATH])
     config_file = os.path.join(CONFIG_DIR, f"client_wg.conf")
     if os.path.exists(config_file):

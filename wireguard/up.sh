@@ -20,7 +20,6 @@ echo "[+] Blocking VPN inter-user traffic..."
 iptables -D FORWARD -i $HOST_IFACE -s $VPN_NET -d $VPN_NET -j DROP 2>/dev/null || true
 iptables -A FORWARD -i $HOST_IFACE -s $VPN_NET -d $VPN_NET -j DROP
 
-
 # Default block VPN access to Docker networks
 echo "[+] Dropping VPN → Docker network traffic by default..."
 for net in $DOCKER_NET1 $DOCKER_NET2 $DOCKER_NET3; do
