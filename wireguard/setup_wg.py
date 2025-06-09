@@ -123,3 +123,24 @@ else:
 
 sudo chown root:adm /etc/wireguard/
 sudo chmod 750 /etc/wireguard/
+
+
+print("Creating ctf_net Docker network if it doesn't exist...")
+try:
+    subprocess.run([
+        "sudo", "docker", "network", "create",
+        "--driver", "bridge",
+        "--subnet", "172.18.0.0/16",
+        "--internal",
+        "ctf_net"
+    ], check=True, capture_output=True, text=True) # capture_output to prevent >
+    print("ctf_net Docker network created or.")
+except subprocess.CalledProcessError as e:
+    # Check if the error is specifically because the network already exists
+    if "network with name ctf_net already exists" in e.stderr:
+        print("ctf_net Docker network already exists.")
+    else:
+        # If it's another type of error, print it and exit
+        print(f"Failed to create ctf_net Docker network: {e.stderr}")
+        sys.exit(1)
+
