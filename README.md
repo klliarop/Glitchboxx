@@ -1,7 +1,7 @@
 
-# Cyber Range Sandbox & WireGuard VPN Server
+# Cyber Range Sandbox
 
-This project provides a **Cyber Range Sandbox** for security exercises and a fully automated **WireGuard VPN server** setup. It includes an admin panel for configuring exercises, user panels for students, and scripts for secure VPN deployment.
+This project provides a **Cyber Range Sandbox** for security exercises and an automated **WireGuard VPN server** setup. It includes an admin panel for configuring exercises and see real-time progress of users and a platform panel for users.
 
 ---
 
@@ -23,27 +23,38 @@ This project provides a **Cyber Range Sandbox** for security exercises and a ful
 ```
 Glitchboxx/
 ├── data/
-│   ├── users.db
-│   └── admins.db
+│   ├── admin.db
+│   └── users.db
 ├── src/
+│   ├── admin.py
+│   ├── panel.py
+│   ├── start.py
 │   ├── auth/
+│   │   ├── __init__.py
+│   │   ├── login.py
+│   │   ├── register.py
+│   │   ├── utils.py
 │   │   └── wg.py
-│   └── challenges/
-│       └── admin.py
+│   ├── configs/
+│   │   └── client_wg.conf
+│   ├── database/
+│   ├── exercises/
+│   │   ├── ftp/
+│   │   ├── http/
+│   │   ├── ssh/
+│   │   ├── templates/
+│   │   ├── admin_base.py
+|   |   └── user_base.py
+│   ├── progress/
+│   └── wallpapers/
 ├── venv/
-├── wireguard-vpn-server/
-│   ├── .env
-│   ├── env.example      
-│   ├── scripts/
-│   │   ├── setup_wireguard.sh
-│   │   ├── restart_wg.sh
-│   │   ├── a_reset_firewall.sh
-│   │   ├── iptables_reset.sh
-│   │   └── up.sh
-│   └── wireguard/
-│       ├── server_private.key
-│       ├── server_public.key
-│       └── wg0.conf
+├── wireguard/
+│   ├── restart_wg.sh
+│   ├── server_private.key
+│   ├── server_public.key
+│   ├── setup_wg.py
+│   ├── up.sh
+│   └── wg_config.json
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
