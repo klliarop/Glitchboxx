@@ -210,19 +210,29 @@ runsc --version
 
 
 ## Running the Application
+Once setup is complete, you can start the Admin and User panels. Ensure your virtual environment is activated (source venv/bin/activate).
 
 ### 1. Start the Admin Panel
 
 ```bash
-streamlit run src/challenges/admin.py --server.address 127.0.0.1
+streamlit run src/challenges/admin.py 
+```
+- The admin panel will open in your browser at [http://your_public_ip:port](http://your_public_ip:port) 
+
+### 2. Run backend Services (Crucial for User/VPN Functionality)
+
+```bash
+python3 login.py
+python3 register.py
+sudo python3 wg.py
 ```
 
-- The admin panel will open in your browser at [http://localhost:8501](http://localhost:8501).
+### 3. Access the User Panel
 
-### 2. Access the User Panel
-
-- Users can access the platform at [http://127.0.0.1:8502](http://127.0.0.1:8502).
-- To specify a user ID: [http://127.0.0.1:8502/?id=1](http://127.0.0.1:8502/?id=1)
+```bash
+streamlit run src/start.py 
+```
+- Users can access the platform at [http://your_public_ip:port](http://your_public_ip:port).
 
 ---
 
