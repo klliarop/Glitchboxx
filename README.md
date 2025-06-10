@@ -217,10 +217,6 @@ streamlit run src/challenges/admin.py --server.address 127.0.0.1
 
 ## WireGuard VPN Management
 
-- **Restart VPN:**  
-  ```bash
-  sudo scripts/restart_wg.sh
-  ```
 - **Reset Firewall:**  
   ```bash
   sudo scripts/a_reset_firewall.sh
@@ -229,13 +225,9 @@ streamlit run src/challenges/admin.py --server.address 127.0.0.1
   ```bash
   sudo scripts/iptables_reset.sh
   ```
-- **Bring Up Interface:**  
-  ```bash
-  sudo scripts/up.sh
-  ```
 
 - **Add Peers:**  
-  Edit wg0.conf and restart the VPN service.
+  Edit wg0.conf (/etc/wireguard/wg0.conf) and restart the VPN service.
 
 ---
 
@@ -265,4 +257,3 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ---
 
-Let me know if you want to further tailor this README for your specific use case!
