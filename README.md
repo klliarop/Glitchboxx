@@ -8,16 +8,10 @@ This project provides a **Cyber Range Sandbox** for security exercises and a ful
 ## Table of Contents
 
 - Project Structure
-- Features
 - Prerequisites
 - Setup Instructions
-  - 1. Clone the Repository
-  - 2. Python Virtual Environment
-  - 3. Install Python Dependencies
-  - 4. Prepare Database Files
-  - 5. Configure Environment Variables
-  - 6. WireGuard VPN Server Setup
 - Running the Application
+- 
 - WireGuard VPN Management
 - Troubleshooting
 - License
@@ -54,18 +48,6 @@ Glitchboxx/
 ├── README.md
 ├── requirements.txt
 ```
-
----
-
-## Features
-
-- **WireGuard VPN Server:** Automated installation, configuration, and management scripts.
-- **Cyber Range Sandbox:** Admin and user panels for security exercises.
-- **Database Integration:** SQLite databases for user and admin management.
-- **Firewall & Networking Scripts:** Automated firewall and iptables configuration.
-- **Docker & gVisor Ready:** Supports containerized environments for exercises.
-- **Python Virtual Environment Support:** Isolated Python dependencies.
-
 ---
 
 ## Prerequisites
@@ -75,7 +57,6 @@ Glitchboxx/
 - **Python 3.6+** (3.8 recommended)
 - **Docker** and **Docker Compose**
 - **gVisor** (see below for installation)
-- **Wireshark** (optional, for PCAP analysis)
 - **WireGuard** (installed automatically by setup script)
 
 ---
@@ -119,7 +100,7 @@ Otherwise, the application will create new ones on first run.
 
 ### 5. Configure Environment Variables
 
-Copy the example file and edit it:
+Edit thw wg_config.json file with the Public IP of your machine:
 
 ```bash
 cd wireguard/
