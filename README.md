@@ -105,12 +105,10 @@ Edit thw wg_config.json file with the Public IP of your machine:
 ```bash
 cd wireguard/
 nano wg_config.json # CHANGE PUBLIC IP
-sudo chmod +x setup_wg.py
-sudo ./setup_wg.py
 ```
 
-- **Set your public IP** for `WG_SERVER_ENDPOINT` and `VPN_BACKEND_URL`
-
+- **Set your public IP** for `WG_SERVER_PUBLIC_IP`
+- ** Do not add anything on private and public keys part. They will be configured automatically.
 ---
 
 ### 6. WireGuard VPN Server Setup
@@ -118,53 +116,75 @@ sudo ./setup_wg.py
 Make scripts executable and run the setup:
 
 ```bash
-chmod +x scripts/*.sh
-sudo scripts/setup_wireguard.sh
+sudo chmod +x setup_wg.py
+sudo ./setup_wg.py
 ```
 
 This will:
 - Install WireGuard
-- Generate server keys if missing and update `.env`
-- Write wg0.conf
+- Generate server keys
+- Write wg0.conf 
 - Enable and start the WireGuard service
 - Run all firewall and iptables scripts
 - Bring up the interface
+- Create need docker networks for exercises
 
 ### 7. Installing Docker, Docker Compose & gVisor
 
 #### **Install Docker**
 
 ```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-```
-
-*Optional: Add your user to the docker group to run Docker without sudo (log out and back in for this to take effect):*
-
-```bash
-sudo usermod -aG docker $USER
-```
-
-#### **Install Docker Compose (v2+)**
-
-```bash
+# Add Docker's official GPG key:
 sudo apt-get update
-sudo apt-get install -y docker-compose-plugin
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+```
+
+```bash
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+To verify install run: 
+```bash
+sudo docker run hello-world
+```
+
+*Needed: Add your user to the docker group to run Docker without sudo (log out and back in for this to take effect):*
+
+```bash
+sudo groupadd docker
+sudo usermod -aG docker $USER
 ```
 
 #### **Install gVisor**
 
 ```bash
-# Download and install runsc (gVisor runtime)
-GVISOR_VERSION=$(curl -s https://api.github.com/repos/google/gvisor/releases/latest | grep tag_name | cut -d '"' -f 4)
-wget https://storage.googleapis.com/gvisor/releases/release/${GVISOR_VERSION}/runsc
-chmod +x runsc
-sudo mv runsc /usr/local/bin
+(
+  set -e
+  ARCH=$(uname -m)
+  URL=https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}
+  wget ${URL}/runsc ${URL}/runsc.sha512 \
+    ${URL}/containerd-shim-runsc-v1 ${URL}/containerd-shim-runsc-v1.sha512
+  sha512sum -c runsc.sha512 \
+    -c containerd-shim-runsc-v1.sha512
+  rm -f *.sha512
+  chmod a+rx runsc containerd-shim-runsc-v1
+  sudo mv runsc containerd-shim-runsc-v1 /usr/local/bin
+)
+```
 
-# (Optional) Install containerd-shim-runsc-v1 for containerd integration
-wget https://storage.googleapis.com/gvisor/releases/release/${GVISOR_VERSION}/containerd-shim-runsc-v1
-chmod +x containerd-shim-runsc-v1
-sudo mv containerd-shim-runsc-v1 /usr/local/bin
+```bash
+sudo /usr/local/bin/runsc install
+sudo systemctl reload docker
+docker run --rm --runtime=runsc hello-world
 ```
 
 ---
