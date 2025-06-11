@@ -87,8 +87,8 @@ Address = 10.9.0.1/24
 ListenPort = {cfg["WG_SERVER_PORT"]}
 PrivateKey = {cfg["WG_SERVER_PRIV_KEY"]}
 
-PostUp = iptables -A FORWARD -i wg0 -d 172.118.0.0/16 -j ACCEPT; iptables -A FORWARD -o wg0 -s 172.118.0.0/16 -j ACCEPT; iptables -A FORWARD -i wg0 ! -d 172.118.0.0/16 -j DROP; iptables -t nat -A POSTROUTING -s 10.9.0.0/24 -d 172.118.0.0/16 -j MASQUERADE
-PostDown = iptables -D FORWARD -i wg0 -d 172.118.0.0/16 -j ACCEPT; iptables -D FORWARD -o wg0 -s 172.118.0.0/16 -j ACCEPT; iptables -D FORWARD -i wg0 ! -d 172.118.0.0/16 -j DROP; iptables -t nat -D POSTROUTING -s 10.9.0.0/24 -d 172.118.0.0/16 -j MASQUERADE
+#PostUp = iptables -A FORWARD -i wg0 -d 172.118.0.0/16 -j ACCEPT; iptables -A FORWARD -o wg0 -s 172.118.0.0/16 -j ACCEPT; iptables -A FORWARD -i wg0 ! -d 172.118.0.0/16 -j DROP; iptables -t nat -A POSTROUTING -s 10.9.0.0/24 -d 172.118.0.0/16 -j MASQUERADE
+#PostDown = iptables -D FORWARD -i wg0 -d 172.118.0.0/16 -j ACCEPT; iptables -D FORWARD -o wg0 -s 172.118.0.0/16 -j ACCEPT; iptables -D FORWARD -i wg0 ! -d 172.118.0.0/16 -j DROP; iptables -t nat -D POSTROUTING -s 10.9.0.0/24 -d 172.118.0.0/16 -j MASQUERADE
 """
 
 subprocess.run(["sudo", "mkdir", "-p", "/etc/wireguard"])

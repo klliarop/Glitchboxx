@@ -46,7 +46,6 @@ class FTPLevel1User(UserExerciseBase):
         container_name = f"ftp_level1_{user_id}"
         host_shared_dir = os.path.join(CURRENT_DIR, "shared")
         os.makedirs(host_shared_dir, exist_ok=True)
-        os.chmod(host_shared_dir, 0o777)
         try:
             existing = client.containers.get(container_name)
             existing.remove(force=True)
@@ -261,7 +260,6 @@ def main(user_id):
             st.session_state["container_ip"] = container_ip
             st.session_state["vpn_ip"] = vpn_ip
             user.add_firewall_rules(vpn_ip, container_ip)
-            st.success(f"Server up and isolated for {vpn_ip} to {container_ip}")
         except subprocess.CalledProcessError as e:
             st.error(f"Error restarting Docker container: {e}")
 

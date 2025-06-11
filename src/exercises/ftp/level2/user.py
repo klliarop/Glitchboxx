@@ -307,7 +307,6 @@ def main(user_id):
             st.session_state["container_ip"] = container_ip
             st.session_state["vpn_ip"] = vpn_ip
             user.add_firewall_rules(vpn_ip, container_ip)
-            st.success(f"Server up and isolated for {vpn_ip} to {container_ip}")
         except subprocess.CalledProcessError as e:
             st.error(f"Error restarting Docker container: {e}")
 
