@@ -6,6 +6,10 @@ import base64  # For encoding images to base64 for backgrounds
 import sys  # For manipulating the Python path
 import json
 
+
+st.set_page_config(
+    page_title="Glitchboxx"   
+)
 #This process was placed into funcion as it was executed before the import of streamlit, which caused an error
 def get_vpn_server_ip():
     try:

@@ -9,12 +9,12 @@ echo "[+] Ensuring DOCKER-USER chain exists..."
 iptables -N DOCKER-USER 2>/dev/null || true
 
 VPN_NET="10.9.0.0/24"
-DOCKER_NET1="172.18.0.0/16"
-DOCKER_NET2="172.28.0.0/16"
-DOCKER_NET3="172.29.0.0/16"
+DOCKER_NET1="172.118.0.0/16"
+DOCKER_NET2="172.128.0.0/16"
+DOCKER_NET3="172.129.0.0/16"
 HOST_IFACE="wg0"
-DOCKER_GATEWAY_1="172.28.0.1"
-DOCKER_GATEWAY_2="172.29.0.1"
+DOCKER_GATEWAY_1="172.128.0.1"
+DOCKER_GATEWAY_2="172.129.0.1"
 
 echo "[+] Blocking VPN inter-user traffic..."
 iptables -D FORWARD -i $HOST_IFACE -s $VPN_NET -d $VPN_NET -j DROP 2>/dev/null || true

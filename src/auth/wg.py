@@ -85,7 +85,7 @@ DNS = 1.1.1.1
 [Peer]
 PublicKey = {SERVER_PUBLIC_KEY}
 Endpoint = {SERVER_ENDPOINT}
-AllowedIPs = 172.18.0.0/16, 172.28.0.0/16, 172.29.0.0/16, 10.9.0.0/24
+AllowedIPs = 172.118.0.0/16, 172.128.0.0/16, 172.129.0.0/16, 10.9.0.0/24
 PersistentKeepalive = 25
 """
 

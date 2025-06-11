@@ -9,6 +9,11 @@ from database.admin_db_manager import is_admin_user  # Import admin authenticati
 
 #import bcrypt  # For password hashing (used in admin login)
 
+st.set_page_config(
+    page_title="Glitchboxx admin panel"
+)
+
+
 # Function to set the background image
 def set_background(image_file):
     base_dir = os.path.dirname(os.path.abspath(__file__))  # Get base directory

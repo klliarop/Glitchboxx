@@ -2,6 +2,10 @@ import streamlit as st  # Import Streamlit for web UI
 import os  # For file and path operations
 import json  # For handling JSON files
 
+st.set_page_config(
+    page_title="Glitchboxx progress dashboard"  
+)
+
 PROGRESS_ROOT = os.path.join(os.path.dirname(__file__), "progress")  # Root directory for progress files
 
 list_of_protocols_and_user_ids = {

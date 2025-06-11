@@ -277,8 +277,8 @@ class HTTPLevel2User(UserExerciseBase):
             print(f"Error reading VPN config: {e}")
             return None
 
-    # Find a free /24 subnet in the 172.29.X.0/24 range not used by Docker
-    def _find_free_subnet(self, base="172.29", start=2, end=255):
+    # Find a free /24 subnet in the 172.129.X.0/24 range not used by Docker
+    def _find_free_subnet(self, base="172.129", start=2, end=255):
         client = docker.from_env()
         used_subnets = set()
         for net in client.networks.list():
