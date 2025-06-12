@@ -131,6 +131,12 @@ sudo chmod +x setup_wg.py
 sudo ./setup_wg.py
 ```
 
+To start services:
+```bash
+sudo chmod +x start_services.sh
+sudo ./start_services.sh
+```
+
 This will:
 - Install WireGuard
 - Generate server keys
