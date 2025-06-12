@@ -160,7 +160,7 @@ class SSHLevel1User(UserExerciseBase):
         if os.path.exists(user_shared_dir):
             shutil.rmtree(user_shared_dir)
         shutil.copytree(os.path.join(CURRENT_DIR, "shared"), user_shared_dir)
-        os.chmod(user_shared_dir, 0o777)
+      #  os.chmod(user_shared_dir, 0o777)
         
         try:
             existing = client.containers.get(container_name)
@@ -281,7 +281,7 @@ def main(user_id):
         <br>
           -  Gain access to the server.
         <br>
-          -  Locate the protected file and gain access to it.
+          -  Locate the protected file and retrieve its contents.
         <br>
           -  Delete Reality_Override.exe once and for all.
         <br> <br>
@@ -298,7 +298,7 @@ def main(user_id):
     if os.path.isfile(HASH_FILE_PATH):
         with open(HASH_FILE_PATH, "r") as f:
             st.download_button(
-                label="Download here",
+                label="Download file here",
                 data=f,
                 file_name="hash.txt",
                 mime="text/plain",
@@ -321,7 +321,6 @@ def main(user_id):
             st.session_state["container_ip"] = container_ip
             st.session_state["vpn_ip"] = vpn_ip
             user.add_firewall_rules(vpn_ip, container_ip)
-            st.success(f"Server up and isolated for {vpn_ip} to {container_ip}")
         except subprocess.CalledProcessError as e:
             st.error(f"Error restarting Docker container: {e}")
 

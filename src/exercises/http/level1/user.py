@@ -330,8 +330,8 @@ def main(user_id):
         <p style='font-size:20px; color:white;'>
     You’re a freelance art thief, always on the lookout for valuable pieces to enrich your personal collection.
     Your latest intel points to a recently acquired Renaissance painting — possibly a long-lost work by Da Vinci — purchased by a private gallery and now scheduled for delivery.
-    The gallery uses outdated tech and the gallery's order and delivery system is vulnerable to eavesdropping so your objective is steal intelligence
-    related to this transaction and become a node of the network.<br>
+    The gallery, each time a purchase or order is made, keeps track of networking traffic between client and server, and then it is stored in the archive.  
+    Your objective is steal intelligence related to this transaction and become a node of the network.<br>
     Your mission: <br>
     - Gather intelligence about the artwork’s order <br>
     - Edit the delivery route and make the painting yours
@@ -401,15 +401,15 @@ def main(user_id):
         st.session_state.container_ip = "none - Press start exercise to continue"
 
     # Question and answer validation for each step with placeholders
-    user.validate_and_update_step(user_id, 1, "1. How many ports are open on the target?", "*", "2")
-    user.validate_and_update_step(user_id, 2, "2. Which service is open in port 21?", "***", "ftp")
-    user.validate_and_update_step(user_id, 3, "3. What is the username for FTP login?", "********s", f"{ftp_username}")
+    user.validate_and_update_step(user_id, 1, "1. How can you reveal the versions of servers on the machine?", "n*** -** ***.***.*.*", f"nmap -sV nmap {st.session_state.container_ip}")
+    user.validate_and_update_step(user_id, 2, "2. Which version of server is open in port 21?", "v****d 2.*.*", "vsftpd 2.0.8")
+    user.validate_and_update_step(user_id, 3, "3. What is the username for FTP login?", "username", f"{ftp_username}")
     user.validate_and_update_step(user_id, 4, "4. You have a file containing network communication between a client and a server. How is this file named?", "j********.****", "juiceshop.pcap")
     user.validate_and_update_step(user_id, 5, "5. Examining the captured network traffic, what network protocol is being used for this communication?", "****/*.*", "http/1.1")
     user.validate_and_update_step(user_id, 6, "6. What type of request method is typically used by a client to send login credentials to a web server?", "****", "post")
     user.validate_and_update_step(user_id, 7, "7. One of main vulnerabilities of HTTP protocol is that communication is not encrypted.Can you identify the username and password submitted by the client?", "email:password", "jkal56@gmail.com:jk246al!")
-    user.validate_and_update_step(user_id, 8, "8. What is the order id of which you want to modify the shipping address?", "*", "1")
-    user.validate_and_update_step(user_id, 9, "9. Enter the flag:", "Flag here...", "f364ab19372c428cfd46370")
+    user.validate_and_update_step(user_id, 8, "8. What is the order id of which you want to modify the shipping address?", "*", "2df4-daf6910253ce85db")
+    user.validate_and_update_step(user_id, 9, "9. Reroute the order and get the flag:", "Flag here...", "f364ab19372c428cfd46370")
 
     # --- Completion Check and Message ---
     all_steps_completed = all(st.session_state.user_progress.get(f"step{i}", False) for i in range(1, 10))

@@ -169,8 +169,7 @@ class SSHLevel2User(UserExerciseBase):
         if os.path.exists(user_shared_dir):
             shutil.rmtree(user_shared_dir)
         shutil.copytree(os.path.join(CURRENT_DIR, "shared"), user_shared_dir)
-        os.chmod(user_shared_dir, 0o777)
-
+       
         root_dir = os.path.join(CURRENT_DIR, "rootfolder")
         shell_source = os.path.join(CURRENT_DIR, "shell.c")
         os.makedirs(root_dir, exist_ok=True)
@@ -306,7 +305,7 @@ def main(user_id):
         After his last defeat and the deletion of Reality_Override.exe, Agent Smith reconstructed himself from corrupted backup data deep inside the simulation.
         Learning from his previous mistakes, he crafted a new file: 'Super_Reality_Override.exe' ,  that is now protected by strict root-level privileges.
         The new file doesn't just overwrite reality—it merges all simulations into one dominant hyperreality under Smith’s control. 
-        Hopefully, we found a misconfiguration for sudo permissions allowing file ownership and permission changes,
+        But hopefully, we found a misconfiguration for sudo permissions allowing file ownership and permission changes,
         which can accidentally allow full root access.
         <br> <br>
         Your objective:
@@ -315,7 +314,7 @@ def main(user_id):
         <br>
           -  Escalate to root privileges.
         <br>
-          -  Locate and delete Super_Reality_Override.exe before it boots.
+          -  Locate and delete 'Super_Reality_Override.exe' before it boots.
         <br> <br>
         A file containing leaked passwords—reportedly retrieved from the dark web—may aid your access.
         Time is running out. The Matrix will become inescapable.
@@ -353,7 +352,6 @@ def main(user_id):
             st.session_state["container_ip"] = container_ip
             st.session_state["vpn_ip"] = vpn_ip
             user.add_firewall_rules(vpn_ip, container_ip)
-            st.success(f"Server up and isolated for {vpn_ip} to {container_ip}")
         except subprocess.CalledProcessError as e:
             st.error(f"Error restarting Docker container: {e}")
 
@@ -385,16 +383,14 @@ def main(user_id):
         st.session_state.container_ip = "none - Press start exercise to continue"
 
     # Validate each step of the exercise
-    user.validate_and_update_step(user_id, 1, "1. How can you see the open services on the target?", "***p ***.*.*.*", "nmap 127.0.0.1")
+    user.validate_and_update_step(user_id, 1, "1. During the scan for open ports what is the version of the server you see?", "O****** 7.***", "OpenSSH 7.6p1")
     user.validate_and_update_step(user_id, 2, "2. What username you suspect is the one to login the server?", "S****_***", "smith_bot")
     user.validate_and_update_step(user_id, 3, "3. Common credentials don't apply so you have to bruteforce. Search for a tool to crack the password?", "cr***m*****c", "crackmapexec")
     st.markdown("""
-    *Hint: Learn about bruteforce attacks [here](https://www.fortinet.com/resources/cyberglossary/brute-force-attack).* 
-    <br>
     *Hint: Learn about common bruteforce tools [here](https://www.techtarget.com/searchsecurity/tip/Top-Kali-Linux-tools-and-how-to-use-them).*
     """, unsafe_allow_html=True)
     user.validate_and_update_step(user_id, 4, "4. What is the name of wordlist you can use?", "da*****2***-t**1****.txt", "darkweb2017-top10000.txt")
-    user.validate_and_update_step(user_id, 5, "5. What command did you bruteforce the system with?", "cr***m****** s** ***.*.*.* -u S****_*** -* da****2****-t**1****.txt", "crackmapexec ssh 127.0.0.1 -u smith_bot -p darkweb2017-top10000.txt")
+    user.validate_and_update_step(user_id, 5, "5. What command did you bruteforce the system with?", "cr***m****** s** ***.*.*.* -u S****_*** -* da****2****-t**1****.txt", f"crackmapexec ssh {st.session_state.container_ip} -u smith_bot -p darkweb2017-top10000.txt")   
     user.validate_credentials(user_id, 6, "6. What are the credentials for the server?", "Smith_bot", "3rJs1la7qE")
     user.validate_and_update_step(user_id, 7, "7. Now you have to escalate to root. What file can help you do that?", "s****.*", "shell.c")
     user.validate_and_update_step(user_id, 8, "8. Privilege escalation via SUID is a type of attack. What command can you fill in the file to escalate to root id?", "s*****(*)", "setuid(0)")

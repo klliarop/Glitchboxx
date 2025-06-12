@@ -291,9 +291,9 @@ def main(user_id):
         st.session_state.container_ip = "none - Press start exercise to continue"
 
     # Validate each step of the exercise
-    user.validate_and_update_step(user_id, 1, "1.Which tool should you use to scan for open ports on the target?", "***p", "nmap")
+    user.validate_and_update_step(user_id, 1, "1.Which tool should you use to scan for open ports on the target?", "***p ***.***.*.*", f"nmap {st.session_state.container_ip}")
     user.validate_and_update_step(user_id, 2, "2.At what port does the FTP appear?", "**", "21")
-    user.validate_and_update_step(user_id, 3, "3.With what command can you connect to the FTP server?", "*** ***.*.*.*", f"ftp {st.session_state.container_ip}")
+    user.validate_and_update_step(user_id, 3, "3.With what command can you connect to the FTP server?", "*** ***.***.*.*", f"ftp {st.session_state.container_ip}")
     user.validate_and_update_step(user_id, 4, "4.What is the default username for FTP login?", "********s", "anonymous")
     user.validate_and_update_step(user_id, 5, "5.What command can you use to download files in ftp?", "***", "get")
     user.validate_flag_step(user_id, 6, "7. Enter the flag", "FLAG{...}", "flag.txt")

@@ -49,7 +49,6 @@ class FTPLevel2User(UserExerciseBase):
         container_name = f"ftp_level2_{user_id}"
         host_shared_dir = os.path.join(CURRENT_DIR, "shared")
         os.makedirs(host_shared_dir, exist_ok=True)
-        os.chmod(host_shared_dir, 0o777)
         try:
             existing = client.containers.get(container_name)
             existing.remove(force=True)
@@ -282,7 +281,7 @@ def main(user_id):
     st.markdown(f"<h1 style='color: white;'>Aftermath: Reverse the Damage</h1>", unsafe_allow_html=True)
     st.markdown("""<p style='font-size:20px; color:white;'>
         You are a security analyst at “NeuroGen Biotech” an organization specializing in biochemical research.
-        You were informed about a data breach that happened at the FTP server. Someone logged in and stole a confidential medicine recipe.
+        You were informed about a data breach that happened at the FTP server located within the corporate internal network. Someone logged in and stole a confidential medicine recipe.
         Worse, they changed all the employee passwords, disrupting all the on-going projects.
         However, the intruder wasn't very thorough and used some very basic credentials.
         Your mission is to:
@@ -338,13 +337,15 @@ def main(user_id):
         st.session_state.container_ip = "none - Press start exercise to continue"
 
     # Validate each step of the exercise
-    user.validate_and_update_step(user_id, 1, "1. Which tool enables you to see the open services on the target?", "***p", "nmap")
+    user.validate_and_update_step(user_id, 1, "1. Which tool enables you to see the open services on the target?", "***p ***.***.*.*", f"nmap {st.session_state.container_ip}")
     user.validate_and_update_step(user_id, 2, "2. What username you suspect is the one to login the server?", " ", f"{ftp_username}")
     user.validate_and_update_step(user_id, 3, "3. What type of attack involves repeatedly trying many passwords to gain access?", "b*********", "bruteforce")
     st.markdown("""
-    *Hint: Learn more [here](https://www.infosecinstitute.com/resources/hacking/popular-tools-for-brute-force-attacks/).*
+    *Hint: Learn about this type of attacks [here](https://www.fortinet.com/resources/cyberglossary/brute-force-attack).* 
+    <br>
+    *Hint: Learn more about common tools: [here](https://www.infosecinstitute.com/resources/hacking/popular-tools-for-brute-force-attacks/).*
     <br>""", unsafe_allow_html=True)
-    user.validate_and_update_step(user_id, 4, "4. Common credentials don't apply to the ftp server. What tool can you use to crack the password?", "h****", "hydra")
+    user.validate_and_update_step(user_id, 4, "4. Based on the previous question and hint, what tool can you use to crack the password?", "h****", "hydra")
     user.validate_and_update_step(user_id, 5, "5. What is the name of wordlist you can use?", "5**-w****-p********.txt", "500-worst-passwords.txt")
 
     if os.path.isfile(WORDLIST_FILE_PATH):
@@ -359,11 +360,11 @@ def main(user_id):
     else:
         st.warning("Wordlist file not found.")
 
-    user.validate_and_update_step(user_id, 6, "6. What command did you use to crack passwords of server?", "h**** -* {username} -* 500-worst-passwords.txt f**://***.*.*.*:**", f"hydra -l {ftp_username} -P 500-worst-passwords.txt ftp://{st.session_state.container_ip}")
+    user.validate_and_update_step(user_id, 6, "6. What command did you use to crack passwords of server?", "h**** -* {suspected_username} -* 500-worst-passwords.txt f**://***.*.*.*:**", f"hydra -l {ftp_username} -P 500-worst-passwords.txt ftp://{st.session_state.container_ip}:21")
     user.validate_credentials(user_id, 7, "7. What are the credentials for login of server?", ftp_username, ftp_password)
     user.validate_and_update_step(user_id, 8, "8. Which tool can help you analyze PCAP files?", "w********", "wireshark")
-    user.validate_and_update_step(user_id, 9, " 9. What is the suspicious IP found in the pcap file? ", "Enter IP here", "192.168.1.254")
-    user.validate_and_update_step(user_id, 10, "10. What username was the one that entered with unauthorized access? ", "a********", "anonymous")
+    user.validate_and_update_step(user_id, 9,  "9. What username was the one that entered with unauthorized access? ", "a********", "anonymous")
+    user.validate_and_update_step(user_id, 10, " 10. What is the suspicious IP found in the pcap file? ", "Enter IP here", "192.168.1.254")
     user.validate_flag_step(user_id, 11, "11. Enter the flag", "FLAG{...}", "flag.txt")
 
     # Check if all steps are completed

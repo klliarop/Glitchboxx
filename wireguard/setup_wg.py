@@ -121,8 +121,13 @@ else:
 #sudo chmod 640 /etc/wireguard/wg0.conf
 
 
-sudo chown root:adm /etc/wireguard/
-sudo chmod 750 /etc/wireguard/
+#sudo chown root:adm /etc/wireguard/
+#sudo chmod 750 /etc/wireguard/
+
+
+subprocess.run(["sudo", "chown", "root:adm", "/etc/wireguard/"], check=True)
+subprocess.run(["sudo", "chmod", "750", "/etc/wireguard/"], check=True)
+
 
 
 print("Creating ctf_net Docker network if it doesn't exist...")

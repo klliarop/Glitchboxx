@@ -311,6 +311,16 @@ def main(user_id):
     # Display exercise title
     st.markdown(f"<h1 style='color: white;'>BankSploit</h1>", unsafe_allow_html=True)
 
+
+    #     <p style='font-size:20px; color:white;'>
+    # You’re a freelance art thief, always on the lookout for valuable pieces to enrich your personal collection.
+    # Your latest intel points to a recently acquired Renaissance painting — possibly a long-lost work by Da Vinci — purchased by a private gallery and now scheduled for delivery.
+    # The gallery uses outdated tech and the gallery's order and delivery system is vulnerable to eavesdropping so your objective is steal intelligence
+    # related to this transaction and become a node of the network.<br>
+    # Your mission: <br>
+    # - Gather intelligence about the artwork’s order <br>
+    # - Edit the delivery route and make the painting yours
+
     # Display exercise introduction
     st.markdown("""
         <p style='font-size:20px; color:white;'>
