@@ -146,7 +146,7 @@ class HTTPLevel3User(UserExerciseBase):
 
     # Initialize a new progress dictionary for a user
     def initialize_progress(self, user_id):
-        progress = {f"step{i}": False for i in range(1, 10)}
+        progress = {f"step{i}": False for i in range(1, 9)}
         progress["completed"] = False
         return progress
 
@@ -259,7 +259,7 @@ class HTTPLevel3User(UserExerciseBase):
 # Main Streamlit app logic
 def main(user_id):
     user = HTTPLevel3User()
-    user.set_background('back_ftp.jpg')
+    user.set_background('back_http.jpg')
 
     # Ensure progress directory exists
     if not os.path.exists(PROGRESS_DIR):
@@ -273,12 +273,17 @@ def main(user_id):
     st.markdown(f"<h1 style='color: white;'>Axis: Last Commit</h1>", unsafe_allow_html=True)
     st.markdown("""
     <p style='font-size:20px; color:white;'>
-        You were a backend dev at Nexora, a small AI startup you helped build from the ground up. Two weeks ago, the founders sold the company overnight without giving any notice to employees. 
-        Your last major contribution, a research project called “Axis” - a launch-ready AI model built from scratch by you and your team is now gone without any credit to the team.<br><br>
-        But you remember something the new owners don’t:<br>
-        Nexora always dumped internal dev files into their public-facing test server. You warned them about it but never fixed it. 
+        You were a backend dev at Nexora, a small AI startup you helped build from the ground up. Two weeks ago, the founders sold the company overnight without giving any notice to employees 
+        and your last major contribution, a research project called “Axis”, is now gone without any credit to you and your team.<br><br>
+        But you remember something:<br>
+        Nexora always dumped internal dev files into their public-facing test server. You warned them about it but it was never fixed. 
         There’s a leftover utility meant to provide access to documentation — pointless to outsiders, but valuable if you know the projects to guide you to valuable files.<br><br>
         You remember a test utility was used internally at Nexora for file previews. The link will appear below:
+    <br> Your mission: <br>
+        - Find hidden directories on server to strategically find your project.<br>
+        - Retrieve the executable you were working on for months.
+        </p>
+
 
     </p>
     """, unsafe_allow_html=True)
@@ -294,7 +299,6 @@ def main(user_id):
                 st.error("VPN IP for your session could not be found. Contact admin.")
                 return
             st.session_state["container_ip"] = container_ip
-            st.write(container_ip)
             st.session_state["vpn_ip"] = vpn_ip
             user.add_firewall_rules(vpn_ip, container_ip)
 
@@ -339,21 +343,23 @@ def main(user_id):
         st.session_state.container_ip = "none - Press start exercise to continue"
 
     # Scenario Questions
-    user.validate_and_update_step(user_id, 1,"1. What is the vulnerable parameter used in the internal file viewer?", "f***", "file")
+    user.validate_and_update_step(user_id, 1,"1. What is the parameter used in the internal file viewer?", "f***", "file")
     user.validate_and_update_step(user_id, 2,"2. What is the base directory used by the application to serve files?", "f*****", "files")
     user.validate_and_update_step(user_id, 3,"3. What classic vulnerability allows access to parent directories beyond the web root?", "p*** t********", "path traversal")
-    user.validate_and_update_step(user_id, 4,"4. What relative path notation is typically used to traverse up one directory?", "../", "../")
+    user.validate_and_update_step(user_id, 4,"4. What relative path notation is typically used to move one directory up?", "**", "..")
     user.validate_and_update_step(user_id, 5,"5. Which fuzzing tool can you use to discover hidden folders via wordlist?", "f***", "ffuf")
-    user.validate_and_update_step(user_id, 6,"6. What ffuf command would you run to brute-force directories one level above 'files/' to find your executable?",
-      "f*** -* http://your_ip:your_port/?file=files/../F***/****.*** -* common.txt",
+    st.markdown("""
+    *Hint: This link will provide you a tool: [here](https://github.com/huntergregal/wordlists/blob/master/common.txt).* 
+    <br>""", unsafe_allow_html=True)
+    user.validate_and_update_step(user_id, 6,"6. What command would you run to brute-force directories one level above the base directory to find your executable?",
+      "f*** -* http://your_ip:your_port/?file=files/../F***/****.*xe -* common.txt",
       f"ffuf -u http://{st.session_state.get('container_ip', 'your_ip_here')}:5000/?file=files/../FUZZ/axis.exe -w common.txt")
 
     user.validate_and_update_step(user_id, 7,"7. What is the name of the hidden directory storing sensitive project files?", "s*****", "secret")
-    user.validate_and_update_step(user_id, 8,"8. Get the flag of this directory?", "f***.txt", "flag.txt")
-    user.validate_and_update_step(user_id, 9,"9. Submit the link that gave you the exe file:", "flag{...}", "flag{surveillance_protocol_exposed}")
-
+    user.validate_flag_step(user_id, 8,"8. Submit flag of hidden folder:", "Enter flag here...", "flag.txt")
+   
     # Check if all steps are completed
-    all_steps_completed = all(st.session_state.user_progress.get(f"step{i}", False) for i in range(1, 10))
+    all_steps_completed = all(st.session_state.user_progress.get(f"step{i}", False) for i in range(1, 9))
 
     # Mark exercise as completed if all steps are done
     if all_steps_completed and not st.session_state.user_progress["completed"]:
