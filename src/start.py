@@ -316,7 +316,10 @@ def main():
                     <code>sudo chmod 600 /etc/wireguard/wg0.conf</code><br>
                     <code>sudo wg-quick up wg0</code><br><br>
                     - To confirm the connection, run: <br>
-                    <code>ping 10.9.0.1</code><br>
+                    <code>ping 10.9.0.1</code><br><br>
+                    - To disconnect, run: <br>
+                    <code>sudo wg-quick down wg0</code><br>
+                    <code>sudo rm /etc/wireguard/wg0.conf</code><br>
                 </div>
             """, unsafe_allow_html=True)
 
