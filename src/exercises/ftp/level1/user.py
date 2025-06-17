@@ -296,7 +296,7 @@ def main(user_id):
     user.validate_and_update_step(user_id, 3, "3.With what command can you connect to the FTP server?", "*** ***.***.*.*", f"ftp {st.session_state.container_ip}")
     user.validate_and_update_step(user_id, 4, "4.What is the default username for FTP login?", "********s", "anonymous")
     user.validate_and_update_step(user_id, 5, "5.What command can you use to download files in ftp?", "***", "get")
-    user.validate_flag_step(user_id, 6, "7. Enter the flag", "FLAG{...}", "flag.txt")
+    user.validate_flag_step(user_id, 6, "6. Enter the flag", "FLAG{...}", "flag.txt")
 
     # Check if all steps are completed
     all_steps_completed = all(st.session_state.user_progress.get(f"step{i}", False) for i in range(1, 7))

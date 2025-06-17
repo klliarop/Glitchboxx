@@ -75,7 +75,7 @@ def main():
     selected_service = st.selectbox("Choose a service:", services)  # Service selection dropdown
     selected_level = st.selectbox("Choose a level:", levels)  # Level selection dropdown
 
-    if st.button("Select"):
+    if st.button("Select & Refresh"):
         st.session_state.services = selected_service
         st.session_state.level = selected_level
         st.session_state.exercise_running = True
