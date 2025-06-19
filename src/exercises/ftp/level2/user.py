@@ -361,6 +361,25 @@ def main(user_id):
         st.warning("Wordlist file not found.")
 
     user.validate_and_update_step(user_id, 6, "6. What command did you use to crack passwords of server?", "h**** -* {suspected_username} -* 500-worst-passwords.txt f**://***.*.*.*:**", f"hydra -l {ftp_username} -P 500-worst-passwords.txt ftp://{st.session_state.container_ip}:21")
+
+  
+    if st.button("Get your video hint"):
+        # YouTube video URL
+        video_url = "https://www.youtube.com/watch?v=wcmpp8IPZOA"
+        video_embed = video_url.replace("watch?v=", "embed/")
+
+        # Show the embedded video
+        st.markdown(f"""
+        <iframe width="720" height="405"
+        src="{video_embed}"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+        </iframe>
+        """, unsafe_allow_html=True)
+
+        st.markdown("---")
+
     user.validate_credentials(user_id, 7, "7. What are the credentials for login of server?", ftp_username, ftp_password)
     user.validate_and_update_step(user_id, 8, "8. Which tool can help you analyze PCAP files?", "w********", "wireshark")
     user.validate_and_update_step(user_id, 9,  "9. What username was the one that entered with unauthorized access? ", "a********", "anonymous")

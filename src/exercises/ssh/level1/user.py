@@ -286,7 +286,7 @@ def main(user_id):
           -  Delete Reality_Override.exe once and for all.
         <br> <br>
         A seemingly forgotten file, perhaps containing an encoded secret, may aid your access.
-        Time is running out. Break into the server before the reality collapses!
+        Time is running out. Break into the server before reality collapses!
         </p>
     """, unsafe_allow_html=True)
 
@@ -357,6 +357,11 @@ def main(user_id):
     user.validate_and_update_step(user_id, 3, "3. What is a widely used tool for attempting to recover the original plaintext password from its cryptographic digest?", "j*** t** r*****", "john the ripper")
     user.validate_and_update_step(user_id, 4, "4. Which is one of the most widely known password lists often used in password cracking tools?", "r******.txt","rockyou.txt")
     user.validate_and_update_step(user_id, 5, "5. What command gives you the plaintext of password?", "j*** --w*******=r******.txt h***.txt","john --wordlist=rockyou.txt hash.txt")
+    
+     st.markdown("""
+    *Hint: Learn more: [here](https://holyfathar.medium.com/the-power-of-john-the-ripper-a-password-cracking-tool-8b8f90d616a).*
+    <br>""", unsafe_allow_html=True)
+
     user.validate_credentials(user_id, 6, "6. What are the credentials for login of server?", ssh_username, ssh_password)
     user.validate_and_update_step(user_id, 7, "7. Which command provides a detailed breakdown of each file in a directory, including permissions, ownership, size, while also showing hidden entries?", "** -**","ls -la")
     user.validate_and_update_step(user_id, 8, "8. Can you locate the secret password of zip folder?", "f********","fghcvb456")

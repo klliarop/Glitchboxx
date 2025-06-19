@@ -139,7 +139,7 @@ try:
         "--internal",
         "ctf_net"
     ], check=True, capture_output=True, text=True) # capture_output to prevent >
-    print("ctf_net Docker network created or.")
+    print("ctf_net Docker network created")
 except subprocess.CalledProcessError as e:
     # Check if the error is specifically because the network already exists
     if "network with name ctf_net already exists" in e.stderr:

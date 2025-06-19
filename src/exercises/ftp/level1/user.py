@@ -284,11 +284,35 @@ def main(user_id):
                 user-select: all;
             ">{st.session_state.container_ip}</code><br>
         </div>
+        <div style='margin-bottom: 30px;'></div> 
         """, unsafe_allow_html=True)
 
     if "container_ip" not in st.session_state:
         # Set a default value if container_ip is not set
         st.session_state.container_ip = "none - Press start exercise to continue"
+
+        st.markdown("And if you are having a hard time... <br>", unsafe_allow_html=True)
+
+        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+
+
+    if st.button("Get your happy hacking gift"):
+        # YouTube video URL
+        video_url = "https://www.youtube.com/watch?v=RLCCkHy0hSo"
+        video_embed = video_url.replace("watch?v=", "embed/")
+
+        # Show the embedded video
+        st.markdown(f"""
+        <iframe width="720" height="405"
+        src="{video_embed}"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+        </iframe>
+        """, unsafe_allow_html=True)
+
+        st.markdown("---")
+
 
     # Validate each step of the exercise
     user.validate_and_update_step(user_id, 1, "1.Which tool should you use to scan for open ports on the target?", "***p ***.***.*.*", f"nmap {st.session_state.container_ip}")
