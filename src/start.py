@@ -6,7 +6,6 @@ import base64  # For encoding images to base64 for backgrounds
 import sys  # For manipulating the Python path
 import json
 
-
 st.set_page_config(
     page_title="Glitchboxx"   
 )
@@ -25,7 +24,10 @@ def get_vpn_server_ip():
 # Base URLs for backend services
 BASE_URL_LOGIN = "http://127.0.0.1:5001"  # Login service
 BASE_URL_REGISTER = "http://127.0.0.1:5002"  # Registration service
-BASE_URL_VPN = f"http://{get_vpn_server_ip()}:5003"
+#BASE_URL_VPN = f"http://{get_vpn_server_ip()}:5003"
+
+BASE_URL_VPN = "https://glitchboxx.duckdns.org/vpn"
+
 
 # Add project root to Python path for module imports
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

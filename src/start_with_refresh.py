@@ -1,4 +1,3 @@
- cat start.py
 import streamlit as st  # Import Streamlit for web UI
 import requests  # For making HTTP requests to backend services
 import importlib  # For dynamic module import
@@ -26,7 +25,10 @@ def get_vpn_server_ip():
 # Base URLs for backend services
 BASE_URL_LOGIN = "http://127.0.0.1:5001"  # Login service
 BASE_URL_REGISTER = "http://127.0.0.1:5002"  # Registration service
-BASE_URL_VPN = f"http://{get_vpn_server_ip()}:5003"
+#BASE_URL_VPN = f"http://{get_vpn_server_ip()}:5003"
+BASE_URL_VPN = "https://glitchboxx.duckdns.org/vpn"
+
+
 
 # Add project root to Python path for module imports
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -189,7 +191,237 @@ def exercise_selection_page():
         st.rerun()
 
 
-# def exercise_selection_page():
+
+
+
+# Main app logic
+def main():
+    set_custom_styles()  # Apply custom styles
+
+
+    if "logged_in" not in st.session_state or not st.session_state.logged_in:
+        user_id = st.query_params.get("user_id")
+        if user_id:
+            st.session_state.logged_in = True
+            st.session_state.user_id = user_id
+        else:
+            st.session_state.logged_in = False
+
+    # --- Always initialize session state variables first! ---
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    if "exercise_running" not in st.session_state:
+        st.session_state.exercise_running = False
+    if "exercise" not in st.session_state:
+        st.session_state.exercise = None
+    if "level" not in st.session_state:
+        st.session_state.level = None
+    if "user_id" not in st.session_state:
+        st.session_state.user_id = None
+
+    # Restore login from query params if needed
+#    if "logged_in" not in st.session_state:
+ #       user_id = st.query_params.get("user_id")
+  #      if user_id:
+   #         st.session_state.logged_in = True
+    #        st.session_state.user_id = user_id
+     #   else:
+      #      st.session_state.logged_in = False
+
+    # Always use .get() to avoid KeyError
+    exercise = st.session_state.get("exercise") or st.query_params.get("exercise")
+    level = st.session_state.get("level") or st.query_params.get("level")
+    user_id = st.session_state.get("user_id") or st.query_params.get("user_id")
+
+
+
+
+    # Initialize session state variables
+#    if "logged_in" not in st.session_state:
+ #       st.session_state.logged_in = False
+  #  if "exercise_running" not in st.session_state:
+   #     st.session_state.exercise_running = False
+
+#    user_id = st.query_params.get("user_id")
+ #   exercise = st.session_state.get("exercise") or st.query_params.get("exercise")
+  #  level = st.session_state.get("level") or st.query_params.get("level")
+
+
+#    if exercise and level:
+ #       progress_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exercises", exercise, level, "progress")
+ #   else:
+ #       progress_dir = None
+
+    # Show login/register tabs if not logged in
+    if not st.session_state.logged_in:
+        tab1, tab2 = st.tabs(["Login", "Register"])
+        with tab1:
+            login_user()
+        with tab2:
+            register_user()
+    else:
+        # If exercise is running, show exercise UI and cleanup logic
+        if st.session_state.exercise_running or ("exercise" in st.query_params and "level" in st.query_params):
+#            if st.button("Return to exercise selection"):
+#                st.session_state.exercise_running = False
+ #               st.query_params.pop("exercise", None)
+  #              st.query_params.pop("level", None)
+
+
+
+            if st.button("Return to exercise selection"):
+                # --- Save all needed values BEFORE popping ---
+                exercise_val = st.session_state.get("exercise") or st.query_params.get("exercise")
+                level_val = st.session_state.get("level") or st.query_params.get("level")
+                user_id_val = st.session_state.get("user_id") or st.query_params.get("user_id")
+                progress_dir_val = None
+                if exercise_val and level_val:
+                    progress_dir_val = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exercises", exercise_val, level_val, "progress")
+
+                # Remove user progress file if it exists
+                if user_id_val and progress_dir_val and os.path.exists(progress_dir_val):
+                    user_file_path = os.path.join(progress_dir_val, f"{user_id_val}.json")
+                    if os.path.exists(user_file_path):
+                        os.remove(user_file_path)
+                        st.success(f"Deleted progress file: {user_file_path}")
+
+                # Clean up Docker containers and firewall rules for the user
+                compose_dir = os.path.dirname(os.path.abspath(__file__))
+                if exercise_val and level_val:
+                    compose_file_path = os.path.join(compose_dir, "exercises", exercise_val, level_val, "docker-compose.yml")
+                    module_name = f"exercises.{exercise_val}.{level_val}.user"
+                    module = importlib.import_module(module_name)
+                    class_name = f"{exercise_val.upper()}Level{level_val[-1]}User"
+                    print(f"[DEBUG] class_name: {class_name}")
+
+                    if hasattr(module, class_name):
+                        user_obj = getattr(module, class_name)()
+                        vpn_ip = user_obj.get_vpn_ip_for_user(user_id_val, config_path="/etc/wireguard/wg0.conf")
+                        container_ip = user_obj.get_container_ip(user_id_val)
+                        if vpn_ip and container_ip:
+                            user_obj.remove_firewall_rules(vpn_ip, container_ip)
+                        else:
+                            print(f"[WARNING] Skipping firewall rule removal because vpn_ip or container_ip is None. vpn_ip={vpn_ip}, container_ip={container_ip}")
+                        user_obj.stop_container_for_user(user_id_val)
+                        # Reset progress in session and file
+                        st.session_state.user_progress = user_obj.initialize_progress(user_id_val)
+                        user_obj.save_progress(user_id_val, st.session_state.user_progress)
+                        user_progress_file = user_obj.get_user_progress_file(user_id_val)
+                        if os.path.exists(user_progress_file):
+                            os.remove(user_progress_file)
+                    elif hasattr(module, "stop_container_for_user"):
+                        module.stop_container_for_user(user_id_val)
+                    if hasattr(module, "get_user_progress_file"):
+                        user_progress_file = module.get_user_progress_file(user_id_val)
+                        if os.path.exists(user_progress_file):
+                            os.remove(user_progress_file)
+
+            # --- Now pop/remove from session/query params ---
+                st.session_state.exercise_running = False
+                st.query_params.pop("exercise", None)
+                st.query_params.pop("level", None)
+                st.session_state.pop("exercise", None)
+                st.session_state.pop("level", None)
+
+            # Clear session state except for login info
+                for key in list(st.session_state.keys()):
+                    if key not in ['logged_in', 'user_id']:
+                        del st.session_state[key]
+                st.rerun()
+
+          
+            module_name = f"exercises.{st.query_params['exercise']}.{st.query_params['level']}.user"
+            module = importlib.import_module(module_name)
+            module.main(user_id=st.session_state.user_id)
+            
+        else:
+            # VPN Config section
+            st.markdown("---")
+            st.markdown("<p class='subheader-text'>Start your VPN session</p>", unsafe_allow_html=True)
+            
+            # Instructions for VPN connection
+            st.markdown(f"""
+                <style>
+                    code {{
+                        background-color: #111;
+                        color: #e0e0e0;  
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-family: 'Courier New', monospace;
+                    }}
+                </style>
+                <div style="
+                    background-color: rgba(0, 0, 0, 0.6);
+                    padding: 20px;
+                    border-radius: 8px;
+                    color: #ffffff;
+                    font-family: 'Courier New', monospace;
+                    font-size: 20px;
+                    box-shadow: 0 0 10px #86608E;
+                    margin-top: 30px;
+                ">
+                    To connect to the VPN: <br>
+                    - Press <strong>Generate Config file</strong> <br>
+                    - Download generated file <code>client_wg.conf</code> <br>
+                    - Connect to VPN: <br> 
+                        &emsp;  - Add the downloaded file into the WireGuard app. <br>
+                        &emsp;  - Alternatively, you can run: <br>
+                    <code>sudo apt install wireguard</code><br>
+                    <code>sudo mv ~/Downloads/client_wg.conf /etc/wireguard/wg0.conf</code><br>
+                    <code>sudo chmod 600 /etc/wireguard/wg0.conf</code><br>
+                    <code>sudo wg-quick up wg0</code><br><br>
+                    - To confirm the connection, run: <br>
+                    <code>ping 10.9.0.1</code><br><br>
+                    - To disconnect, run: <br>
+                    <code>sudo wg-quick down wg0</code><br>
+                    <code>sudo rm /etc/wireguard/wg0.conf</code><br>
+                </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Button to generate WireGuard config
+            if st.button("Generate WireGuard Config"):
+                try:
+                    response = requests.post(
+                        f"{BASE_URL_VPN}/generate_config",
+                        data={"username": st.session_state.user_id}
+                    )
+                    if response.status_code == 200:
+                        st.success("WireGuard config generated successfully!")
+                        config_url = f"{BASE_URL_VPN}/download_config?username={st.session_state.user_id}"
+                        st.markdown(f"[📥 Download Config File]({config_url})", unsafe_allow_html=True)
+                    else:
+                        st.error("Failed to generate config.")
+                except requests.exceptions.RequestException as e:
+                    st.error(f"Error contacting VPN service: {e}")
+
+            exercise_selection_page()  # Show exercise selection page
+
+            # Logout button and cleanup
+            if st.button("Logout"):
+                try:
+                    # Remove WireGuard config before logout
+                    requests.post(f"{BASE_URL_VPN}/remove_config", data={"username": st.session_state.user_id})
+                except requests.exceptions.RequestException as e:
+                    st.error(f"Could not contact VPN service for logout cleanup: {e}")
+
+                st.session_state.logged_in = False
+                st.session_state.user_id = None
+                st.session_state.exercise_running = False
+                st.query_params.clear()
+                st.rerun()
+
+if __name__ == "__main__":
+    main()  # Run the Streamlit app
+
+
+
+
+
+
+
+# exercise_selection_page():
 #     set_background('app_wallpaper.jpg')
 #     st.markdown("<p class='subheader-text'>Select an Exercise</p>", unsafe_allow_html=True)
 
@@ -221,4 +453,3 @@ def exercise_selection_page():
 #         st.query_params["exercise"] = exercise
 #         st.query_params["level"] = level
 #         st.rerun()
-
