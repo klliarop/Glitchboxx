@@ -347,8 +347,47 @@ def main():
             module.main(user_id=st.session_state.user_id)
             
         else:
+
+            st.markdown("<p class='subheader-text'>Welcome!</p>", unsafe_allow_html=True)
+            
+            # Styled Glitchboxx content usin
+            st.markdown(f"""
+                <style>
+                    .glitchboxx-content {{
+                        font-family: 'Courier New', monospace;
+                        font-size: 18px;
+                        color: #ffffff;
+                        background-color: rgba(0, 0, 0, 0.6);
+                        padding: 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 0 10px #86608E;
+                        margin-top: 30px;
+                        text-align: left;
+                    }}
+
+                    a.feedback-link {{
+                        color: #ADD8E6;
+                        text-decoration: underline;
+                    }}
+                </style>
+
+                <div class="glitchboxx-content">
+                    <strong>Glitchboxx</strong> is a playground to start your journey in the world of cybersecurity,
+                    designed to explore and experiment with your offensive skills – safely and without breaking anything real!
+                    <br><br>
+                    Help us make your Glitchboxx experience even better – please share your feedback below!
+                    <br>
+                    <a class="feedback-link" href="https://docs.google.com/forms/d/e/1FAIpQLScnhXsmpn5UjhC7fWJtUrEHkLMKHapJdwq2wITpxbW1UpqDtA/viewform?usp=dialog" target="_blank">
+                        Give us your feedback
+                    </a>
+                </div>
+            """, unsafe_allow_html=True)
+
+
             # VPN Config section
             st.markdown("---")
+
+
             st.markdown("<p class='subheader-text'>Start your VPN session</p>", unsafe_allow_html=True)
             
             # Instructions for VPN connection
@@ -368,7 +407,7 @@ def main():
                     border-radius: 8px;
                     color: #ffffff;
                     font-family: 'Courier New', monospace;
-                    font-size: 20px;
+                    font-size: 18px;
                     box-shadow: 0 0 10px #86608E;
                     margin-top: 30px;
                 ">
