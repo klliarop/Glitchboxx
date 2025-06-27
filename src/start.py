@@ -373,7 +373,7 @@ def main():
 
                 <div class="glitchboxx-content">
                     <strong>Glitchboxx</strong> is a playground to start your journey in the world of cybersecurity,
-                    designed to explore and experiment with your offensive skills – safely and without breaking anything real!
+                    designed to explore and experiment with your offensive skills, safely and without breaking anything real!
                     <br><br>
                     Help us make your Glitchboxx experience even better – please share your feedback below!
                     <br>
@@ -384,13 +384,6 @@ def main():
             """, unsafe_allow_html=True)
 
 
-            # VPN Config section
-            st.markdown("---")
-
-
-            st.markdown("<p class='subheader-text'>Start your VPN session</p>", unsafe_allow_html=True)
-            
-            # Instructions for VPN connection
             st.markdown(f"""
                 <style>
                     code {{
@@ -411,7 +404,7 @@ def main():
                     box-shadow: 0 0 10px #86608E;
                     margin-top: 30px;
                 ">
-                    To connect to the VPN: <br>
+                    To connect to the VPN (Linux Edition): <br>
                     - Press <strong>Generate Config file</strong> <br>
                     - Download generated file <code>client_wg.conf</code> <br>
                     - Connect to VPN: <br> 
@@ -425,9 +418,20 @@ def main():
                     <code>ping 10.9.0.1</code><br><br>
                     - To disconnect, run: <br>
                     <code>sudo wg-quick down wg0</code><br>
-                    <code>sudo rm /etc/wireguard/wg0.conf</code><br>
+                    <code>sudo rm /etc/wireguard/wg0.conf</code><br><br>
+                    To connect to the VPN (Windows Edition): <br>
+                    <a class="feedback-link" href="https://www.wireguard.com/install/" target="_blank">
+                    Install WireGuard App for Windows 
+                    </a><br>
+                    - Press <strong>Generate Config file</strong> <br>
+                    - Download generated file <code>client_wg.conf</code> and insert into "Add Empty Tunnel" in Wireguard App <br>
                 </div>
             """, unsafe_allow_html=True)
+
+
+
+            # VPN Config section
+            st.markdown("---")
 
             st.markdown("<br>", unsafe_allow_html=True)
 
