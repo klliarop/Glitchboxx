@@ -1,7 +1,10 @@
 
-# Cyber Range Sandbox
+# Glitchboxx Cyber Range Sandbox
 
-This project provides a **Cyber Range Sandbox** for security exercises and an automated **WireGuard VPN server** setup. It includes an admin panel for configuring exercises and see real-time progress of users and a platform panel for users.
+This project provides a **Cyber Range Sandbox** for security training that contains guided CTF(Capture The Flag) Exercises that simulate basic attack scenarios. The users are able to choose between them and connect to their personal exercise environment (after login on platform and connection to VPN). Exercises are done when all steps are completed and flag is captured.
+
+Also, an admin panel is provided for configuration of exercises (credentials to services and ports that they appear) as well as add and edit files that are displayed on the user's environment. Except for the configuration, a progress panel is provided where the progress of users on an exercise is shown at that given time.
+
 
 ---
 
@@ -64,7 +67,7 @@ Glitchboxx/
 
 - **Linux-based server** (Ubuntu/Debian recommended)
 - **Root or sudo access** for VPN and firewall setup
-- **Python 3.6+** (3.8 recommended)
+- **Python 3.11.2**
 - **Docker** and **Docker Compose**
 - **gVisor** (see below for installation)
 - **WireGuard** (installed automatically by setup script)
@@ -83,7 +86,7 @@ cd Glitchboxx/
 
 ---
 
-### 2. Python Virtual Environment  (Using Python 3.12)
+### 2. Python Virtual Environment  (Using Python 3.11.2)
 
 ```bash
 sudo apt update
@@ -113,7 +116,7 @@ Otherwise, the application will create new ones on first run.
 
 ### 5. Configure Environment Variables
 
-Edit thw wg_config.json file with the Public IP of your machine:
+Edit the wg_config.json file with the Public IP of your machine:
 
 ```bash
 cd wireguard/
@@ -143,31 +146,20 @@ This will:
 - Install WireGuard
 - Generate server keys
 - Write wg0.conf 
-- Enable and start the WireGuard service
+- Enable and start the WireGuard service (VPN server)
 - Run all firewall and iptables scripts
 - Bring up the interface
-- Create need docker networks for exercises
+- Create needed docker networks for exercises
 
 ### 7. Installing Docker, Docker Compose & gVisor
 
 #### **Install Docker**
 
-```bash
-# Add Docker's official GPG key:
-sudo apt-get update
-sudo apt-get install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
+Follow the official Docker installation guide for your OS:  
+https://docs.docker.com/engine/install/
 
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-```
 
+Install docker compose plugin:
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
@@ -185,6 +177,11 @@ sudo usermod -aG docker $USER
 
 #### **Install gVisor**
 
+
+Follow the official gVisor installation guide:  
+https://gvisor.dev/docs/user_guide/install/
+
+If you encounter errors running containers with the runsc runtime, try the following installation steps:
 ```bash
 (
   set -e
