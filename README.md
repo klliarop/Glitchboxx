@@ -274,13 +274,3 @@ streamlit run src/start.py
 
 ---
 
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
----
-
-**For any issues or contributions, please open an issue or pull request on GitHub.**
-
----
-
