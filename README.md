@@ -215,42 +215,48 @@ runsc --version
 ```
 
 
+
 ## Running the Application
-Once setup is complete, you can start the Admin and User panels. Ensure your virtual environment is activated (source venv/bin/activate).
+Once setup is complete, you can start the User panel and Admin panels. Ensure your virtual environment is activated (source venv/bin/activate).
 
-### 1. Start the Admin Panel
+### 1. Start Panels
 
+To start the user panel:
 ```bash
-streamlit run src/challenges/admin.py 
+streamlit run src/user.py 
 ```
 - The admin panel will open in your browser at [http://your_public_ip:port](http://your_public_ip:port) 
 
+To start admin panel:
+```bash
+streamlit run src/admin.py 
+```
+- The admin panel will open in your browser at [http://your_public_ip:port](http://your_public_ip:port) 
+
+To start progress panel:
+```bash
+streamlit run src/panel.py 
+```
+- The admin panel will open in your browser at [http://your_public_ip:port](http://your_public_ip:port) 
+
+Note: You can add a proxy for routing to https by: 
+
+
 ### 2. Run backend Services (Crucial for User/VPN Functionality)
 
+In order for correct functionality of the front-end pages, it is needed to run these services:
 ```bash
 python3 login.py
 python3 register.py
 sudo python3 wg.py
 ```
 
-### 3. Access the User Panel
-
-```bash
-streamlit run src/start.py 
-```
-- Users can access the platform at [http://your_public_ip:port](http://your_public_ip:port).
-
----
 
 ## WireGuard VPN Management
 
-- **Reset Firewall:**  
+- **Restart WireGuard:**  
   ```bash
-  sudo scripts/a_reset_firewall.sh
-  ```
-- **Reset iptables:**  
-  ```bash
-  sudo scripts/iptables_reset.sh
+  sudo wireguard/restart_wg.sh
   ```
 
 - **Add Peers:**  
@@ -271,7 +277,6 @@ streamlit run src/start.py
   - Check iptables backend: `sudo update-alternatives --config iptables`
   - Ensure IP forwarding: `sudo sysctl -w net.ipv4.ip_forward=1`
   - Reboot if kernel or Docker was updated.
-
 ---
 
 ## License
