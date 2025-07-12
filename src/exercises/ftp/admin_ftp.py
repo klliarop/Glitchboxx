@@ -109,7 +109,8 @@ class FTPConfig(AdminConfig):
             pcap_filename = "reported_intrusion.pcap"
 
             if st.button("Add PCAP File to Logs directory"):
-                source_pcap = "reported_intrusion.pcap"
+                CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+                source_pcap = os.path.join(CURRENT_DIR, "level2", "reported_intrusion.pcap")
                 logs_dir = os.path.join(shared_dir, "Logs")
                 destination_pcap = os.path.join(logs_dir, pcap_filename)
 

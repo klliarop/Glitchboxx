@@ -156,6 +156,16 @@ class HTTPLevel2User(UserExerciseBase):
             print(f"[ERROR] Unexpected error: {e}")
             return None
 
+    def add_vpn_docker_routing(self, vpn_subnet, docker_subnet):
+        subprocess.run([
+            "sudo", "iptables", "-A", "FORWARD", "-i", "wg0", "-s", vpn_subnet, "-d", docker_subnet, "-j", "ACCEPT"
+        ], check=True)
+        subprocess.run([
+            "sudo", "iptables", "-A", "FORWARD", "-o", "wg0", "-s", docker_subnet, "-d", vpn_subnet, "-j", "ACCEPT"
+        ], check=True)
+        subprocess.run([
+            "sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-s", docker_subnet, "-o", "wg0", "-j", "MASQUERADE"
+        ], check=True)
 
     # Add iptables rules to allow VPN IP <-> container IP communication
     def add_firewall_rules(self, vpn_ip, container_ip):
@@ -353,6 +363,7 @@ def main(user_id):
             st.session_state["vpn_ip"] = vpn_ip
 
             # Add firewall rules for this session
+            user.add_vpn_docker_routing(vpn_ip, subnet)
             user.add_firewall_rules(vpn_ip, subnet)
 
         except subprocess.CalledProcessError as e:

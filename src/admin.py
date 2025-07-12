@@ -146,7 +146,7 @@ def edit_files(exercise_type, level, config_func):
         st.warning("Shared directory not found.")  # Warn if shared directory does not exist
 
 # --- Admin Panel UI ---
-st.title("Glitchbox Admin Panel")  # Set panel title
+st.title("Glitchboxx Admin Panel")  # Set panel title
 st.markdown(""" **Choose exercise type and level to configure**
         """, unsafe_allow_html=True)
 exercise_type = st.selectbox("Select Exercise Type", ["FTP", "SSH", "HTTP"])  # Exercise type selection

@@ -1,6 +1,8 @@
 import streamlit as st  # Import Streamlit for web UI
 import os  # For file and path operations
 import json  # For handling JSON files
+from database.admin_db_manager import is_admin_user  # ίδιο με admin panel
+
 
 st.set_page_config(
     page_title="Glitchboxx progress dashboard"  
@@ -65,15 +67,44 @@ def load_all_progress_files(selected_service, selected_level):
 
     return user_progress_data  # Return list of user progress entries
 
+
+if "admin_logged_in" not in st.session_state or not st.session_state["admin_logged_in"]:
+    st.title("Admin Login")  # Show login title
+    with st.form("admin_login_form"):
+        username = st.text_input("Admin Username")  # Input for admin username
+        password = st.text_input("Admin Password", type="password")  # Input for admin password
+        login_button = st.form_submit_button("Login")  # Login button
+        if login_button:
+            if is_admin_user(username, password):  # Check admin credentials
+                st.session_state["admin_logged_in"] = True
+                st.session_state["admin_username"] = username
+                st.success("Login successful!")
+                st.rerun()
+            else:
+                st.error("Invalid admin credentials")
+        st.stop()
+else:
+    username = st.session_state["admin_username"]  # Get logged-in admin username
+
+
+
 def main():
     st.title("User Progress Dashboard")  # Set the page title
 
     CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))  # Get current directory
     services = ["ftp", "ssh", "http"]  # List of supported services
-    levels = ["level1", "level2"]  # List of supported levels
+  #  levels = ["level1", "level2"]  # List of supported levels
 
     selected_service = st.selectbox("Choose a service:", services)  # Service selection dropdown
+    
+
+    if selected_service == "http":
+        levels = ["level1", "level2", "level3"]
+    else:
+        levels = ["level1", "level2"]
+
     selected_level = st.selectbox("Choose a level:", levels)  # Level selection dropdown
+
 
     if st.button("Select & Refresh"):
         st.session_state.services = selected_service
