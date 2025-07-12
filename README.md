@@ -11,7 +11,6 @@ This project provides a **Cyber Range Sandbox** for security exercises and an au
 - Prerequisites
 - Setup Instructions
 - Running the Application
-- 
 - WireGuard VPN Management
 - Troubleshooting
 - License
@@ -87,9 +86,12 @@ cd Glitchboxx/
 ### 2. Python Virtual Environment  (Using Python 3.12)
 
 ```bash
-sudo apt-get install python3.12 python3.12-venv python3.12-dev
-python3 -m venv venv
+sudo apt update
+sudo apt install python3.11 python3.11-venv python3.11-dev
+
+python3.11 -m venv venv
 source venv/bin/activate
+
 ```
 
 ---

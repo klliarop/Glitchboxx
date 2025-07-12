@@ -1,4 +1,6 @@
 #!/bin/bash
+sudo apt update
+sudo apt install tmux
 
 SESSION="glitchboxx"
 
@@ -35,7 +37,7 @@ tmux send-keys -t $SESSION:6 "$VENV_ACT && cd $PROJECT_ROOT/src && streamlit run
 
 # 3. WireGuard Python Script (sudo may prompt password)
 tmux new-window -t $SESSION:3 -n 'wg'
-tmux send-keys -t $SESSION:3 "$VENV_ACT && cd $PROJECT_ROOT/src/auth && sudo su && python3 wg.py" C-m
+tmux send-keys -t $SESSION:3 "sudo su && $VENV_ACT && cd $PROJECT_ROOT/src/auth && python3 wg.py" C-m
 
 
 
