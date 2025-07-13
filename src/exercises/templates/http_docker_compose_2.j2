@@ -12,7 +12,7 @@ services:
       #  - DB_NAME=vulnerable_db  # (commented out) alternative DB name
     depends_on:
       - db  # Ensure db service starts before web
-    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
+ #   runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
     networks:
       http_net_{{ user_id }}:
         ipv4_address: {{ web_ip }}  # Assign static IP to web container
@@ -32,7 +32,7 @@ services:
     networks:
       http_net_{{ user_id }}:
         ipv4_address: {{ db_ip }}  # Assign static IP to db container
-    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
+#    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
 
   ftp:
     container_name: ftp_http_level2_{{ user_id }}  # Unique container name per user
@@ -57,12 +57,12 @@ services:
     depends_on:
       - web  # Ensure web service starts before traffic generator
     environment:
-      TARGET_URL: "http://172.29.0.10/index.php"  # Target URL for traffic generation
-      PROXY_URL: "http://172.29.0.10/index.php"   # Proxy URL for traffic generation
+      TARGET_URL: "http://{{ web_ip }}/index.php"  # Target URL for traffic generation
+      PROXY_URL: "http://{{ web_ip }}/index.php"   # Proxy URL for traffic generation
     networks:
       http_net_{{ user_id }}:
         ipv4_address: {{ traffic_ip }}  # Assign static IP to traffic generator container
-    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
+#    runtime: runsc  # Use gVisor (runsc) runtime for sandboxing
 
 networks:
   http_net_{{ user_id }}:

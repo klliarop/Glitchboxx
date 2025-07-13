@@ -156,17 +156,6 @@ class HTTPLevel2User(UserExerciseBase):
             print(f"[ERROR] Unexpected error: {e}")
             return None
 
-    def add_vpn_docker_routing(self, vpn_subnet, docker_subnet):
-        subprocess.run([
-            "sudo", "iptables", "-A", "FORWARD", "-i", "wg0", "-s", vpn_subnet, "-d", docker_subnet, "-j", "ACCEPT"
-        ], check=True)
-        subprocess.run([
-            "sudo", "iptables", "-A", "FORWARD", "-o", "wg0", "-s", docker_subnet, "-d", vpn_subnet, "-j", "ACCEPT"
-        ], check=True)
-        subprocess.run([
-            "sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-s", docker_subnet, "-o", "wg0", "-j", "MASQUERADE"
-        ], check=True)
-
     # Add iptables rules to allow VPN IP <-> container IP communication
     def add_firewall_rules(self, vpn_ip, container_ip):
         print(f"Adding precise firewall rules for {vpn_ip} → {container_ip}")
@@ -174,6 +163,7 @@ class HTTPLevel2User(UserExerciseBase):
         subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "DOCKER-USER", "1","-i", "wg0", "-s", vpn_ip, "-d", container_ip, "-j", "ACCEPT"], check=True)
         # Allow return traffic from container to VPN IP
         subprocess.run(["sudo", "/usr/sbin/iptables", "-I", "DOCKER-USER", "1","-o", "wg0", "-s", container_ip, "-d", vpn_ip, "-j", "ACCEPT"], check=True)
+
 
     # Remove iptables rules for VPN IP <-> container IP
     def remove_firewall_rules(self , vpn_ip, container_ip):
@@ -309,6 +299,7 @@ class HTTPLevel2User(UserExerciseBase):
 def main(user_id):
     user = HTTPLevel2User()
     user.set_background('back_http.jpg')
+#    user_id = st.session_state.user_id  # or wherever you get user_id from
 
     # Ensure progress directory exists
     if not os.path.exists(PROGRESS_DIR):
@@ -353,9 +344,14 @@ def main(user_id):
         try:
             # Start the user's container and get IPs
             container_ip, subnet = user.start_container_for_user(user_id)
+            print("subnett is:" , subnet)
+
+
             print("container_ip: (what the start returns - gateway)", container_ip)
             vpn_ip = user.get_vpn_ip_for_user(user_id)
             print("vpn_ip: (what the get_vpn_ip returns)", vpn_ip)
+
+
             if not vpn_ip:
                 st.error("VPN IP for your session could not be found. Contact admin.")
                 return
@@ -363,7 +359,6 @@ def main(user_id):
             st.session_state["vpn_ip"] = vpn_ip
 
             # Add firewall rules for this session
-            user.add_vpn_docker_routing(vpn_ip, subnet)
             user.add_firewall_rules(vpn_ip, subnet)
 
         except subprocess.CalledProcessError as e:
@@ -399,13 +394,77 @@ def main(user_id):
     # Question and answer validation for each step
     user.validate_and_update_step(user_id, 1, "1. How many open ports are on the server?", "*", "2")
     user.validate_and_update_step(user_id, 2, "2. What tool allows you to capture raw network packets, visualize traffic flow in real time, and apply filters to analyze protocols?", "w********", "wireshark")
+
+
+    CAPTURE_PATH = os.path.join(os.path.dirname(__file__), "shared", "capture.pcap")
+
+
+    def get_docker_bridge_interface(container_ip):
+        subnet_prefix = '.'.join(container_ip.split('.')[:3]) + '.'
+
+        try:
+            output = subprocess.check_output("ip -o -4 addr show", shell=True).decode()
+            for line in output.splitlines():
+                parts = line.split()
+                iface = parts[1]
+                ip_addr = parts[3].split('/')[0]
+
+  #              st.write(f" Checking iface: {iface} with IP: {ip_addr}")#for troubleshooting
+                if iface.startswith("br-") and ip_addr.startswith(subnet_prefix):
+#                    st.write(f" Found docker bridge: {iface} with IP: {ip_addr}")
+                    return iface
+        except Exception as e:
+            st.error(f"Error finding docker bridge interface: {e}")
+
+        st.warning("Docker bridge not found.")
+        return None
+
+
+    if st.button("Start live Capture with tcpdump"):
+        container_ip = user.get_container_ip(user_id)  # Make sure user and user_id are in scope here!
+
+
+        status_placeholder = st.empty()
+        status_placeholder.info("Starting live capture of network for 60 seconds...  ")
+
+        if not container_ip:
+            st.error("Container IP not found.")
+        else:
+            iface = get_docker_bridge_interface(container_ip)
+
+            if iface:
+                capture_cmd = f"sudo timeout 60 tcpdump -i {iface} tcp port 80 -w {CAPTURE_PATH}"
+                try:
+                    subprocess.run(capture_cmd, shell=True, check=True)
+                    st.success("Capture completed successfully.")
+                except subprocess.CalledProcessError as e:
+                    if e.returncode == 124:
+                        st.success("Capture completed. You can now download the captured traffic.")
+                    else:
+                        st.error(f"tcpdump failed with exit code {e.returncode}")
+            else:
+                st.warning("Docker bridge not found.")
+
+
+    if os.path.exists(CAPTURE_PATH):
+        with open(CAPTURE_PATH, "rb") as f:
+            st.download_button(
+                label="Download the captured traffic",
+                data=f,
+                file_name="capture.pcap",
+                mime="application/octet-stream"
+            )
+    else:
+        st.info("Capture not done yet")
+
+
     user.validate_and_update_step(user_id, 3, "3. What network protocol is used together with HTTP to provide reliable communication and handle acknowledgments, as seen in the server's communication?", "***", "tcp")
     user.validate_and_update_step(user_id, 4, "4. What term or code in communication indicates the acknowledgment of received packets?", "***", "ack")
     user.validate_and_update_step(user_id, 5, "5. Based on the open port analysis, what filter can you apply to isolate traffic to the bank's service?", "***.**** == ****", "tcp.port == 8080")
     user.validate_and_update_step(user_id, 6, "6. What HTTP status code indicates that a login attempt was unauthorized?", "*** U***********", "401 unauthorized")
     user.validate_and_update_step(user_id, 7, "7. What type of HTTP methods are being used in this network?", "***,****", "get,post")
     user.validate_and_update_step(user_id, 8, "8. What is the name of the bank you entered?", "**********", "septemtica")
-    user.validate_and_update_step(user_id, 9, "9. If you made a successful transfer, enter the flag:5", "Flag here...", "7a5f8d3e1c9b24680a42d59")
+    user.validate_and_update_step(user_id, 9, "9. If you made a successful transfer, enter the flag:", "Flag here...", "7a5f8d3e1c9b24680a42d59")
    
     # --- Completion Check and Message ---
     all_steps_completed = all(st.session_state.user_progress.get(f"step{i}", False) for i in range(1, 10))
