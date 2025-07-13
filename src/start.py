@@ -193,9 +193,14 @@ def exercise_selection_page():
 def main():
     set_custom_styles()  # Apply custom styles
 
-    # Initialize session state variables
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
+    if "logged_in" not in st.session_state or not st.session_state.logged_in:
+        user_id = st.query_params.get("user_id")
+        if user_id:
+            st.session_state.logged_in = True
+            st.session_state.user_id = user_id
+        else:
+            st.session_state.logged_in = False
+
     if "exercise_running" not in st.session_state:
         st.session_state.exercise_running = False
 
@@ -221,6 +226,8 @@ def main():
 
 
             if st.button("Return to exercise selection"):
+                status_placeholder = st.empty()
+                status_placeholder.info("Closing Environment. This process might take a moment...  ")
                 # --- Save all needed values BEFORE popping ---
                 exercise_val = st.session_state.get("exercise") or st.query_params.get("exercise")
                 level_val = st.session_state.get("level") or st.query_params.get("level")
@@ -280,66 +287,6 @@ def main():
                         del st.session_state[key]
                 st.rerun()
 
-
-            
-            # if st.button("Return to exercise selection"):
-            #     st.session_state.exercise_running = False
-            #     st.query_params.pop("exercise", None)
-            #     st.query_params.pop("level", None)
-
-            #     # Remove user progress file if it exists
-            #     if user_id and os.path.exists(progress_dir):
-            #         user_file_path = os.path.join(progress_dir, f"{user_id}.json")
-            #         if os.path.exists(user_file_path):
-            #             os.remove(user_file_path)
-            #             st.success(f"Deleted progress file: {user_file_path}")
-
-            #     # Clean up Docker containers and firewall rules for the user
-            #     compose_dir = os.path.dirname(os.path.abspath(__file__))
-            #     exercise = st.session_state.get("exercise")
-            #     level = st.session_state.get("level")
-            #     if exercise and level:
-            #         compose_file_path = os.path.join(compose_dir, "exercises", exercise, level, "docker-compose.yml")
-                    
-            #         module_name = f"exercises.{exercise}.{level}.user"
-            #         module = importlib.import_module(module_name)
-
-            #         class_name = f"{exercise.upper()}Level{level[-1]}User"
-            #         print(f"[DEBUG] class_name: {class_name}")
-
-            #         if hasattr(module, class_name):
-            #             user_obj = getattr(module, class_name)()
-                        
-            #             vpn_ip = user_obj.get_vpn_ip_for_user(user_id, config_path="/etc/wireguard/wg0.conf")
-            #             container_ip = user_obj.get_container_ip(user_id)
-
-            #             if vpn_ip and container_ip:
-            #                 user_obj.remove_firewall_rules(vpn_ip, container_ip)
-            #             else:
-            #                 print(f"[WARNING] Skipping firewall rule removal because vpn_ip or container_ip is None. vpn_ip={vpn_ip}, container_ip={container_ip}")
-
-            #             user_obj.stop_container_for_user(user_id) 
-                        
-            #             # Reset progress in session and file
-            #             st.session_state.user_progress = user_obj.initialize_progress(user_id)
-            #             user_obj.save_progress(user_id, st.session_state.user_progress)
-            #             user_progress_file = user_obj.get_user_progress_file(user_id)
-            #             if os.path.exists(user_progress_file):
-            #                 os.remove(user_progress_file)
-            #         elif hasattr(module, "stop_container_for_user"):
-            #             module.stop_container_for_user(user_id)  
-               
-            #         if hasattr(module, "get_user_progress_file"):
-            #             user_progress_file = module.get_user_progress_file(user_id)
-            #             if os.path.exists(user_progress_file):
-            #                 os.remove(user_progress_file)
-                           
-
-            #     # Clear session state except for login info
-            #     for key in list(st.session_state.keys()):
-            #         if key not in ['logged_in', 'user_id']:
-            #             del st.session_state[key]
-            #     st.rerun()
 
             # Dynamically import and run the user exercise module
             module_name = f"exercises.{st.query_params['exercise']}.{st.query_params['level']}.user"
@@ -419,12 +366,6 @@ def main():
                     - To disconnect, run: <br>
                     <code>sudo wg-quick down wg0</code><br>
                     <code>sudo rm /etc/wireguard/wg0.conf</code><br><br>
-                    To connect to the VPN (Windows Edition): <br>
-                    <a class="feedback-link" href="https://www.wireguard.com/install/" target="_blank">
-                    Install WireGuard App for Windows 
-                    </a><br>
-                    - Press <strong>Generate Config file</strong> <br>
-                    - Download generated file <code>client_wg.conf</code> and insert into "Add Empty Tunnel" in Wireguard App <br>
                 </div>
             """, unsafe_allow_html=True)
 

@@ -67,7 +67,6 @@ def load_all_progress_files(selected_service, selected_level):
 
     return user_progress_data  # Return list of user progress entries
 
-
 if "admin_logged_in" not in st.session_state or not st.session_state["admin_logged_in"]:
     st.title("Admin Login")  # Show login title
     with st.form("admin_login_form"):

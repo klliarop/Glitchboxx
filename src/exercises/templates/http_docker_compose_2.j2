@@ -2,13 +2,13 @@ services:
   web:
     build: .  # Build the web service from the current directory
     ports:
-      - "{{ gateway_ip }}:{{ http_port }}:80"  # Map host port 8080 to container port 80, binding to gateway_ip
+      - "{{ gateway_ip }}:{{ http_port }}:8080"  # Map host port 8080 to container port 80, binding to gateway_ip
     container_name: web_level2_{{ user_id }}  # Unique container name per user
     environment:
       - DB_HOST={{ db_ip }}  # Database host IP
       - DB_USER={{ db_user }}  # Database username
       - DB_PASS={{ db_pass }}  # Database password
-      - MYSQL_DATABASE=ctf   # Database name (used by the web app)
+      - MYSQL_DATABASE=ctf2   # Database name (used by the web app)
       #  - DB_NAME=vulnerable_db  # (commented out) alternative DB name
     depends_on:
       - db  # Ensure db service starts before web
@@ -24,7 +24,7 @@ services:
     environment:
       - DB_HOST={{ db_ip }}  # Database host IP (not required by MySQL, but passed)
       - MYSQL_ROOT_PASSWORD={{ db_pass }}  # MySQL root password
-      - MYSQL_DATABASE=ctf  # Database name
+      - MYSQL_DATABASE=ctf2  # Database name
       - MYSQL_USER={{ db_user }}  # MySQL user
       - MYSQL_PASSWORD={{ db_pass }}  # MySQL user password
     volumes:
