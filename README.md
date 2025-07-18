@@ -136,12 +136,6 @@ sudo chmod +x setup_wg.py
 sudo ./setup_wg.py
 ```
 
-To start services:
-```bash
-sudo chmod +x start_services.sh
-sudo ./start_services.sh
-```
-
 This will:
 - Install WireGuard
 - Generate server keys
@@ -224,6 +218,8 @@ To start the user panel:
 ```bash
 streamlit run src/user.py 
 ```
+You might be asked for sudo (administrator) access 
+
 - The admin panel will open in your browser at [http://your_public_ip:port](http://your_public_ip:port) 
 
 To start admin panel:
@@ -250,6 +246,17 @@ python3 register.py
 sudo python3 wg.py
 ```
 
+Also, a start_services.sh file is provided to run the necessary services:
+```bash
+sudo chmod +x start_services.sh
+sudo ./start_services.sh
+```
+After running this script make sure all services are running correctly as it might differ from system to system. 
+- Press Ctrl + b + {number_of_window} : To see different services
+- Press Ctrl + d : to detach/exit session
+- ```bash
+tmux attach -t glitchboxx
+``` to log back in session
 
 ## WireGuard VPN Management
 
