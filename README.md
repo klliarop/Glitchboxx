@@ -254,9 +254,7 @@ sudo ./start_services.sh
 After running this script make sure all services are running correctly as it might differ from system to system. 
 - Press Ctrl + b + {number_of_window} : To see different services
 - Press Ctrl + d : to detach/exit session
-- ```bash
-  tmux attach -t glitchboxx
-``` to log back in session
+- Run:  tmux attach -t glitchboxx --> to log back in session
 
 ## WireGuard VPN Management
 
@@ -271,6 +269,12 @@ After running this script make sure all services are running correctly as it mig
 ---
 
 ## Troubleshooting
+
+- **After server restart:**
+  - You have to repeat step 3 of Setup Instructions (for setting up VPN server)
+  - Restart all services (Running The Application part)
+
+ 
 
 - **VPN not working?**  
   - Check WireGuard status: `sudo systemctl status wg-quick@wg0`
