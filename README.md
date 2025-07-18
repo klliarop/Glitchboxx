@@ -279,10 +279,6 @@ tmux attach -t glitchboxx
   - Ensure firewall allows UDP port 51820:  
     `sudo ufw allow 51820/udp`
 
-- **Networking issues after updates?**
-  - Check iptables backend: `sudo update-alternatives --config iptables`
-  - Ensure IP forwarding: `sudo sysctl -w net.ipv4.ip_forward=1`
-  - Reboot if kernel or Docker was updated.
 ---
 
 ## License
