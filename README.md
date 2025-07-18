@@ -271,7 +271,7 @@ After running this script make sure all services are running correctly as it mig
 ## Troubleshooting
 
 - **After server restart:**
-  - You have to repeat step 3 of Setup Instructions (for setting up VPN server)
+  - You have to repeat step 6 of Setup Instructions (WireGuard VPN Server Setup)
   - Restart all services (Running The Application part)
 
  
